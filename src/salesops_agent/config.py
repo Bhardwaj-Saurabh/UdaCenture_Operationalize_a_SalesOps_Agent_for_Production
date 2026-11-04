@@ -35,6 +35,7 @@ class ToolSettings(_Section):
 
 class GuardrailSettings(_Section):
     input_policy_version: str
+    tool_policy_version: str
 
 
 class PathSettings(_Section):
