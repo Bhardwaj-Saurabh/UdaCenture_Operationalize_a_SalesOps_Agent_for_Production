@@ -1,0 +1,29 @@
+# Runtime configuration for the SalesOps agent. Secrets stay in .env.
+agent:
+  prompt:
+    name: salesops_system
+    version: v1
+
+model:
+  name: gpt-4.1-mini
+  temperature: 0
+
+tools:
+  # Only these tools are given to the agent. The restricted internal tools and
+  # send_email stay off until the guardrails and approval gate exist (Step 5).
+  enabled:
+    - lookup_account
+    - lookup_account_context
+    - list_open_opportunities
+    - summarize_pipeline
+    - draft_email
+
+# Relative paths resolve from the project root.
+paths:
+  crm_data: data/crm
+  restricted_data: data/restricted
+  outbox: data/outbox/email_outbox.json
+  prompts: prompts
+  logs: logs
+  traces: traces
+  reports: reports
