@@ -1,4 +1,7 @@
-* 1fce302 (HEAD -> main, origin/main) Add pytest evaluation suite with golden tasks and JSON report
+* b5cab8b (HEAD -> main, origin/main) Add input guardrail scenarios to the evaluation suite
+* 56d4ecc Add input guardrail with versioned policy, blocking restricted requests before the model
+* e93fc37 Regenerate GITLOG.txt from git history
+* 1fce302 Add pytest evaluation suite with golden tasks and JSON report
 * c4343fa Add salesops-agent ask command with run logs and trace files
 * 207580d Add GITLOG.txt generated from git history
 * 1f4da60 Document versioned components in CLAUDE.md
