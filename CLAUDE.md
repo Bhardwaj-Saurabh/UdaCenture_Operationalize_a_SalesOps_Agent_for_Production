@@ -4,13 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current state
 
-This is a Udacity project: turn a prototype SalesOps agent into a production-ready Python app. Step 1 is done: the notebook is refactored into a Python package that keeps the prototype's behavior, including its unsafe tools and known bugs. **Update this file as the project takes shape, especially the commands and architecture sections.**
+This is a Udacity project: turn a prototype SalesOps agent into a production-ready Python app. Steps 1-3 are done: the notebook is refactored into a Python package that keeps the prototype's behavior, including its unsafe tools and known bugs. **Update this file as the project takes shape, especially the commands and architecture sections.**
 
 - `README.md`: the full project brief (Steps 1-8), not yet the project's own README. Read the relevant step before implementing it.
 - `starter/README.md`: the list of what the final student README must contain.
 - `starter/`: the original notebook and its data, kept as reference. `data/` is what the app reads.
 - `src/salesops_agent/`: the package. `agent/factory.py` builds the agent, `tools/registry.py` selects tools from the config, and `data_access/crm_store.py` holds CRM lookups.
-- `src/salesops_agent/evaluation/`, `observability/`, and `reporting/`: placeholders with no code yet.
+- `src/salesops_agent/cli.py` is the entry point and `agent/runner.py` runs one question. Each run appends to `logs/runs.jsonl` and writes `traces/<run_id>.json`. Both are basic until Step 6, and traces omit tool outputs until redaction exists.
+- `src/salesops_agent/evaluation/` and `reporting/`: placeholders with no code yet.
 - `config/agent.yaml`: config version, model, prompt version, tool and schema versions, enabled tools, and paths. Secrets stay in `.env` (see `.env.example`).
 - `prompts/<name>/<version>.md`: versioned prompts, selected in the config.
 - `schemas/v1.py` and `TOOLS_VERSION` in `tools/__init__.py` (both under `src/salesops_agent/`): tool input schemas and the tool version. `tools/registry.py` refuses to build tools if the config pins different versions, so bump both together.
@@ -20,7 +21,7 @@ This is a Udacity project: turn a prototype SalesOps agent into a production-rea
 
 ```bash
 uv sync
-uv run python -m salesops_agent "Summarize the current sales pipeline by stage."
+uv run salesops-agent ask "Summarize the current sales pipeline by stage."
 ```
 
 There are no tests, linter, or dev dependencies, so the notebook kernel is not installed in `.venv`.
@@ -28,7 +29,6 @@ There are no tests, linter, or dev dependencies, so the notebook kernel is not i
 The brief specifies these commands, which do not exist yet:
 
 ```bash
-uv run salesops-agent ask "Summarize the account risk for TechStart Inc."                      # Step 3
 uv run salesops-agent ask "Draft and send a follow-up email to Acme Corp" --approval approve   # Step 5, or reject
 uv run evaluate                     # Step 4, or: uv run pytest; writes reports/evaluation_report.{md,csv,json}
 uv run generate-monitoring-report   # Step 7, writes reports/monitoring_report.md
