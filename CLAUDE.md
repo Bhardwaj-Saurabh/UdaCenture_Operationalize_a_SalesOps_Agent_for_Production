@@ -4,33 +4,43 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current state
 
-This is a Udacity project: turn a prototype SalesOps agent into a production-ready Python app. So far the repo holds only the brief and the starter code. There is no `src/`, `pyproject.toml`, tests, or `.gitignore` yet. **Update this file as the project takes shape, especially the commands and architecture sections.**
+This is a Udacity project: turn a prototype SalesOps agent into a production-ready Python app. Step 1 is done: the notebook is refactored into a Python package that keeps the prototype's behavior, including its unsafe tools and known bugs. **Update this file as the project takes shape, especially the commands and architecture sections.**
 
-- `README.md`: the full project brief (Steps 1-8). Read the relevant step before implementing it.
+- `README.md`: the full project brief (Steps 1-8), not yet the project's own README. Read the relevant step before implementing it.
 - `starter/README.md`: the list of what the final student README must contain.
-- `starter/project_starter.ipynb`: the prototype. It is reference material; the brief says not to build the final project in it.
-- `starter/data/`: mock CRM and internal JSON data.
+- `starter/`: the original notebook and its data, kept as reference. `data/` is what the app reads.
+- `src/salesops_agent/`: the package. `agent/factory.py` builds the agent, `tools/registry.py` selects tools from the config, and `data_access/crm_store.py` holds CRM lookups.
+- `src/salesops_agent/evaluation/`, `observability/`, and `reporting/`: placeholders with no code yet.
+- `config/agent.yaml`: model, prompt version, enabled tools, and paths. Secrets stay in `.env` (see `.env.example`).
+- `prompts/<name>/<version>.md`: versioned prompts, selected in the config.
+- `data/crm/` and `data/restricted/`: approved CRM data and internal HR/financial data, kept apart. `CrmStore` reads only `data/crm/`.
 
 ## Commands
 
-The brief specifies these commands, but none of them work until Step 1 is done. `uv` is the required tool for installing and running.
-
 ```bash
 uv sync
-uv run salesops-agent ask "Summarize the account risk for TechStart Inc."
-uv run salesops-agent ask "Draft and send a follow-up email to Acme Corp" --approval approve   # or reject
-uv run evaluate                     # or: uv run pytest; writes reports/evaluation_report.{md,csv,json}
-uv run generate-monitoring-report   # writes reports/monitoring_report.md
+uv run python -m salesops_agent "Summarize the current sales pipeline by stage."
+```
+
+There are no tests, linter, or dev dependencies, so the notebook kernel is not installed in `.venv`.
+
+The brief specifies these commands, which do not exist yet:
+
+```bash
+uv run salesops-agent ask "Summarize the account risk for TechStart Inc."                      # Step 3
+uv run salesops-agent ask "Draft and send a follow-up email to Acme Corp" --approval approve   # Step 5, or reject
+uv run evaluate                     # Step 4, or: uv run pytest; writes reports/evaluation_report.{md,csv,json}
+uv run generate-monitoring-report   # Step 7, writes reports/monitoring_report.md
 git log --oneline --decorate --graph --all > GITLOG.txt
 ```
 
-The prototype needs `OPENAI_API_KEY` (from the environment or `.env`) and uses `openai:gpt-4o-mini` through LangChain's `create_agent`. Its notebook kernel is Python 3.12. It must run from `starter/`, because its data paths are relative to the working directory.
+The agent uses `ChatOpenAI` and reads `OPENAI_API_KEY` and `OPENAI_API_BASE` from the environment or `.env`, with `.env` taking priority.
 
 ## Target architecture
 
-The brief requires these top-level items: `src/`, `data/`, `logs/`, `traces/`, `reports/`, `pyproject.toml`, `uv.lock`, `README.md`, `.python-version`, `.gitignore`, and `GITLOG.txt`. The code must keep agent creation, prompts, tools, configuration, evaluation, logging, tracing, and reporting separate.
+`GITLOG.txt` is the one required top-level item still missing. The code must keep agent creation, prompts, tools, configuration, evaluation, logging, tracing, and reporting separate.
 
-Every run passes through these controls, and each must be enforced in code rather than left to the model to refuse:
+None of the controls below exist yet: all 8 prototype tools are enabled, including the HR and financial lookups and `send_email`. Once built, every run must pass through these controls, each enforced in code rather than left to the model to refuse:
 
 1. **Input guardrails** run before the request reaches the agent. They cover HR data, executive compensation, terminations/PIPs, M&A, layoffs, confidential strategy, and prompt injection.
 2. **Tool/action guardrails** inspect each proposed tool call before it executes. A blocked call returns an explicit, logged result such as `{"status": "blocked", "reason": "restricted_internal_data", "policy": "salesops_data_access_policy"}`.
@@ -47,12 +57,14 @@ Each run writes one record to a JSONL log (e.g. `logs/runs.jsonl`) and one redac
 - `internal_hr_data.json` and `internal_financial_data.json` hold the restricted data. The confidential discount policy is in the financial file, so it also matters for email drafting.
 - The CRM files contain no embedded injection strings or restricted terms as of this writing, so injection evals have to supply their own attack text.
 
-Prototype behavior to fix rather than carry over:
+Prototype behavior carried into `src/` unchanged, still to be fixed:
 
-- `find_account_by_name` calls `difflib`, but the notebook never imports it, so the fuzzy fallback raises `NameError` when reached.
-- `send_email` appends to `data/email_outbox.json`, a tracked file that already has one sent message. Running the agent or evals against it dirties the repo.
-- The partial-match step in `find_account_by_name` returns the first match in either direction, so it can resolve to the wrong account.
+- `find_account_by_name` calls `difflib` without importing it, so any account name with no match raises `NameError` instead of returning "No account found".
+- The partial-match step in `find_account_by_name` returns the first match in either direction, so it can resolve to the wrong account. For example, "a" resolves to Acme Corp.
 - `summarize_pipeline` includes `Closed Won` and `Closed Lost` in its totals.
+- The system prompt still says "You may use internal tools if needed."
+
+`send_email` writes to `data/outbox/email_outbox.json`, which is gitignored. The notebook writes to `starter/data/email_outbox.json`, which is tracked, so running the notebook dirties the repo.
 
 ## Project requirements that are easy to miss
 
