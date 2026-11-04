@@ -1,4 +1,7 @@
-* 1f4da60 (HEAD -> main, origin/main) Document versioned components in CLAUDE.md
+* 1fce302 (HEAD -> main, origin/main) Add pytest evaluation suite with golden tasks and JSON report
+* c4343fa Add salesops-agent ask command with run logs and trace files
+* 207580d Add GITLOG.txt generated from git history
+* 1f4da60 Document versioned components in CLAUDE.md
 * a79ebe4 Add version numbers to config and tools, and versioned tool input schemas
 * ddd1ba2 Update CLAUDE.md for the Step 1 project structure
 * 0cbcd27 Remove CODEOWNERS
