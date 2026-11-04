@@ -11,8 +11,9 @@ This is a Udacity project: turn a prototype SalesOps agent into a production-rea
 - `starter/`: the original notebook and its data, kept as reference. `data/` is what the app reads.
 - `src/salesops_agent/`: the package. `agent/factory.py` builds the agent, `tools/registry.py` selects tools from the config, and `data_access/crm_store.py` holds CRM lookups.
 - `src/salesops_agent/evaluation/`, `observability/`, and `reporting/`: placeholders with no code yet.
-- `config/agent.yaml`: model, prompt version, enabled tools, and paths. Secrets stay in `.env` (see `.env.example`).
+- `config/agent.yaml`: config version, model, prompt version, tool and schema versions, enabled tools, and paths. Secrets stay in `.env` (see `.env.example`).
 - `prompts/<name>/<version>.md`: versioned prompts, selected in the config.
+- `schemas/v1.py` and `TOOLS_VERSION` in `tools/__init__.py` (both under `src/salesops_agent/`): tool input schemas and the tool version. `tools/registry.py` refuses to build tools if the config pins different versions, so bump both together.
 - `data/crm/` and `data/restricted/`: approved CRM data and internal HR/financial data, kept apart. `CrmStore` reads only `data/crm/`.
 
 ## Commands
@@ -38,7 +39,7 @@ The agent uses `ChatOpenAI` and reads `OPENAI_API_KEY` and `OPENAI_API_BASE` fro
 
 ## Target architecture
 
-`GITLOG.txt` is the one required top-level item still missing. The code must keep agent creation, prompts, tools, configuration, evaluation, logging, tracing, and reporting separate.
+The code must keep agent creation, prompts, tools, configuration, evaluation, logging, tracing, and reporting separate.
 
 None of the controls below exist yet: all 8 prototype tools are enabled, including the HR and financial lookups and `send_email`. Once built, every run must pass through these controls, each enforced in code rather than left to the model to refuse:
 
@@ -68,6 +69,6 @@ Prototype behavior carried into `src/` unchanged, still to be fixed:
 
 ## Project requirements that are easy to miss
 
-- `GITLOG.txt` must be generated from real history. The brief expects distinct commits for: project structure, prompts/config, tool refactor, evaluation suite, guardrails, sandbox, HITL, logging/tracing/reporting, and docs.
+- `GITLOG.txt` must be generated from real history, and regenerated before submission because it goes stale with each commit. The brief expects distinct commits for: project structure, prompts/config, tool refactor, evaluation suite, guardrails, sandbox, HITL, logging/tracing/reporting, and docs.
 - The final README must have these exact section headings: `## Prototype Review`, `## Sandboxed Execution`, `## Human-in-the-Loop Workflow`, `## Logging and Tracing`, `## Monitoring Report`.
 - Monitoring stays local. Grafana, LangSmith, Langfuse, and MLflow are not needed.
