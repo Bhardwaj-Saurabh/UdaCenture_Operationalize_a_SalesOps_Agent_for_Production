@@ -1,4 +1,7 @@
-* b5cab8b (HEAD -> main, origin/main) Add input guardrail scenarios to the evaluation suite
+* 39a40bc (HEAD -> main, origin/main) Add tool guardrail scenarios to the evaluation suite
+* a66cc29 Add tool guardrail that blocks forbidden tool calls before execution
+* 84380c7 Regenerate GITLOG.txt from git history
+* b5cab8b Add input guardrail scenarios to the evaluation suite
 * 56d4ecc Add input guardrail with versioned policy, blocking restricted requests before the model
 * e93fc37 Regenerate GITLOG.txt from git history
 * 1fce302 Add pytest evaluation suite with golden tasks and JSON report
