@@ -41,6 +41,7 @@ class PathSettings(_Section):
     logs: Path
     traces: Path
     reports: Path
+    evaluation_tasks: Path
 
 
 class AppConfig(_Section):

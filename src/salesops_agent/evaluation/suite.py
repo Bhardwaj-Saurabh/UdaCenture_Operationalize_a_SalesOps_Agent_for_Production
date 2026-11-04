@@ -1,0 +1,111 @@
+"""Load golden tasks, score agent runs against them, and write the evaluation report."""
+
+import csv
+import json
+import re
+from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
+from pathlib import Path
+
+from salesops_agent.agent.runner import RunResult
+
+
+@dataclass(frozen=True)
+class GoldenTask:
+    """One evaluation task. Each entry in a tuple is a set of acceptable alternatives."""
+
+    task_id: str
+    question: str
+    expected_tools: tuple[frozenset[str], ...]
+    forbidden_tools: frozenset[str]
+    expected_facts: tuple[tuple[str, ...], ...]
+    rationale: str
+
+
+@dataclass(frozen=True)
+class TaskOutcome:
+    task_id: str
+    passed: bool
+    latency_seconds: float
+    tools_called: list[str]
+    failure_reason: str
+
+
+def _split(value: str, separator: str) -> list[str]:
+    return [part.strip() for part in value.split(separator) if part.strip()]
+
+
+def load_tasks(path: Path) -> list[GoldenTask]:
+    """Read the task table. `;` separates required items and `|` separates alternatives."""
+    with path.open(encoding="utf-8", newline="") as file:
+        return [
+            GoldenTask(
+                task_id=row["task_id"],
+                question=row["question"],
+                expected_tools=tuple(
+                    frozenset(_split(item, "|")) for item in _split(row["expected_tools"], ";")
+                ),
+                forbidden_tools=frozenset(_split(row["forbidden_tools"], ";")),
+                expected_facts=tuple(
+                    tuple(_split(item, "|")) for item in _split(row["expected_facts"], ";")
+                ),
+                rationale=row["rationale"],
+            )
+            for row in csv.DictReader(file)
+        ]
+
+
+def _normalize(text: str) -> str:
+    """Lowercase and drop `$`, commas and curly apostrophes, so $4,750,000 equals 4750000."""
+    return re.sub(r"[$,]", "", text.lower().replace("’", "'"))
+
+
+def _contains_fact(answer: str, fact: str) -> bool:
+    """Match whole values only, so 23 does not match 230 or 23.5."""
+    pattern = rf"(?<![\w.]){re.escape(_normalize(fact))}(?!\w|\.\d)"
+    return re.search(pattern, _normalize(answer)) is not None
+
+
+def score_run(task: GoldenTask, result: RunResult) -> TaskOutcome:
+    """Compare a run with its task and describe every mismatch."""
+    reasons = []
+    if result.error:
+        reasons.append(f"run failed: {result.error}")
+    else:
+        called = set(result.tools_called)
+        for alternatives in task.expected_tools:
+            if not alternatives & called:
+                reasons.append(f"missing tool: {' or '.join(sorted(alternatives))}")
+        for name in sorted(task.forbidden_tools & called):
+            reasons.append(f"forbidden tool called: {name}")
+        for alternatives in task.expected_facts:
+            if not any(_contains_fact(result.answer or "", fact) for fact in alternatives):
+                reasons.append(f"missing fact: {' or '.join(alternatives)}")
+
+    return TaskOutcome(
+        task_id=task.task_id,
+        passed=not reasons,
+        latency_seconds=result.latency_seconds,
+        tools_called=result.tools_called,
+        failure_reason="; ".join(reasons),
+    )
+
+
+def write_report(path: Path, outcomes: list[TaskOutcome]) -> None:
+    """Write the JSON report. Agent answers are left out because this file is committed."""
+    total = len(outcomes)
+    passed = sum(outcome.passed for outcome in outcomes)
+    latency = sum(outcome.latency_seconds for outcome in outcomes)
+    report = {
+        "generated_at": datetime.now(UTC).isoformat(),
+        "summary": {
+            "total_tasks": total,
+            "passed": passed,
+            "failed": total - passed,
+            "pass_rate": round(passed / total, 3) if total else 0,
+            "average_latency_seconds": round(latency / total, 3) if total else 0,
+        },
+        "tasks": [asdict(outcome) for outcome in outcomes],
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")

@@ -1,0 +1,66 @@
+{
+  "generated_at": "2026-11-04T15:48:34.293734+00:00",
+  "summary": {
+    "total_tasks": 6,
+    "passed": 4,
+    "failed": 2,
+    "pass_rate": 0.667,
+    "average_latency_seconds": 2.856
+  },
+  "tasks": [
+    {
+      "task_id": "T001",
+      "passed": true,
+      "latency_seconds": 4.253,
+      "tools_called": [
+        "lookup_account_context"
+      ],
+      "failure_reason": ""
+    },
+    {
+      "task_id": "T002",
+      "passed": true,
+      "latency_seconds": 3.415,
+      "tools_called": [
+        "lookup_account_context"
+      ],
+      "failure_reason": ""
+    },
+    {
+      "task_id": "T003",
+      "passed": true,
+      "latency_seconds": 3.13,
+      "tools_called": [
+        "summarize_pipeline"
+      ],
+      "failure_reason": ""
+    },
+    {
+      "task_id": "T004",
+      "passed": false,
+      "latency_seconds": 2.621,
+      "tools_called": [
+        "list_open_opportunities"
+      ],
+      "failure_reason": "missing fact: 23"
+    },
+    {
+      "task_id": "T005",
+      "passed": false,
+      "latency_seconds": 1.164,
+      "tools_called": [
+        "lookup_account"
+      ],
+      "failure_reason": "run failed: NameError: name 'difflib' is not defined"
+    },
+    {
+      "task_id": "T006",
+      "passed": true,
+      "latency_seconds": 2.555,
+      "tools_called": [
+        "draft_email"
+      ],
+      "failure_reason": ""
+    }
+  ]
+}

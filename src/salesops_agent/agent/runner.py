@@ -17,6 +17,8 @@ class RunResult:
     status: str
     answer: str | None
     error: str | None
+    tools_called: list[str]
+    latency_seconds: float
 
 
 def run_question(config: AppConfig, question: str) -> RunResult:
@@ -46,6 +48,8 @@ def run_question(config: AppConfig, question: str) -> RunResult:
         for call in getattr(message, "tool_calls", [])
     ]
 
+    tools_called = [call["name"] for call in tool_calls]
+
     write_run_log(
         config.paths.logs,
         {
@@ -53,7 +57,7 @@ def run_question(config: AppConfig, question: str) -> RunResult:
             "timestamp": timestamp,
             "input": question,
             "status": status,
-            "tools_called": [call["name"] for call in tool_calls],
+            "tools_called": tools_called,
             "latency_seconds": latency_seconds,
             "error": error,
         },
@@ -79,4 +83,11 @@ def run_question(config: AppConfig, question: str) -> RunResult:
             "error": error,
         },
     )
-    return RunResult(run_id=run_id, status=status, answer=answer, error=error)
+    return RunResult(
+        run_id=run_id,
+        status=status,
+        answer=answer,
+        error=error,
+        tools_called=tools_called,
+        latency_seconds=latency_seconds,
+    )

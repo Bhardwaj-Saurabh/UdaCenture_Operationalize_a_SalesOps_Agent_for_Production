@@ -1,5 +1,5 @@
 # Runtime configuration for the SalesOps agent. Secrets stay in .env.
-version: 1.0.0
+version: 1.1.0
 
 agent:
   prompt:
@@ -32,3 +32,4 @@ paths:
   logs: logs
   traces: traces
   reports: reports
+  evaluation_tasks: data/evaluation/golden_tasks.csv
