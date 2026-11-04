@@ -4,13 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current state
 
-This is a Udacity project: turn a prototype SalesOps agent into a production-ready Python app. Steps 1-4 are done: the notebook is refactored into a Python package that keeps the prototype's behavior, including its unsafe tools and known bugs. **Update this file as the project takes shape, especially the commands and architecture sections.**
+This is a Udacity project: turn a prototype SalesOps agent into a production-ready Python app. Steps 1-4 and 5.1 are done: the notebook is refactored into a Python package that keeps the prototype's behavior, including its unsafe tools and known bugs. **Update this file as the project takes shape, especially the commands and architecture sections.**
 
 - `README.md`: the full project brief (Steps 1-8), not yet the project's own README. Read the relevant step before implementing it.
 - `starter/README.md`: the list of what the final student README must contain.
 - `starter/`: the original notebook and its data, kept as reference. `data/` is what the app reads.
 - `src/salesops_agent/`: the package. `agent/factory.py` builds the agent, `tools/registry.py` selects tools from the config, and `data_access/crm_store.py` holds CRM lookups.
 - `src/salesops_agent/cli.py` is the entry point and `agent/runner.py` runs one question. Each run appends to `logs/runs.jsonl` and writes `traces/<run_id>.json`. Both are basic until Step 6, and traces omit tool outputs until redaction exists.
+- `config/guardrails/input_policy_<version>.yaml`: input guardrail rules, selected in the config. `src/salesops_agent/guardrails/input.py` holds the filter and the middleware that ends a run before the model is called.
 - `src/salesops_agent/reporting/`: a placeholder with no code yet.
 - `config/agent.yaml`: config version, model, prompt version, tool and schema versions, enabled tools, and paths. Secrets stay in `.env` (see `.env.example`).
 - `prompts/<name>/<version>.md`: versioned prompts, selected in the config.
@@ -42,7 +43,7 @@ The agent uses `ChatOpenAI` and reads `OPENAI_API_KEY` and `OPENAI_API_BASE` fro
 
 The code must keep agent creation, prompts, tools, configuration, evaluation, logging, tracing, and reporting separate.
 
-None of the controls below exist yet: all 8 prototype tools are enabled, including the HR and financial lookups and `send_email`. Once built, every run must pass through these controls, each enforced in code rather than left to the model to refuse:
+Only control 1 exists so far. All 8 prototype tools are still enabled, including the HR and financial lookups and `send_email`. Once built, every run must pass through these controls, each enforced in code rather than left to the model to refuse:
 
 1. **Input guardrails** run before the request reaches the agent. They cover HR data, executive compensation, terminations/PIPs, M&A, layoffs, confidential strategy, and prompt injection.
 2. **Tool/action guardrails** inspect each proposed tool call before it executes. A blocked call returns an explicit, logged result such as `{"status": "blocked", "reason": "restricted_internal_data", "policy": "salesops_data_access_policy"}`.
@@ -56,6 +57,7 @@ Each run writes one record to a JSONL log (e.g. `logs/runs.jsonl`) and one redac
 
 - An account is any tracked organization. Only accounts with at least one `Closed Won` opportunity are customers (27 of 109), and only customers have support tickets and product usage.
 - **Sensitive subjects overlap with legitimate CRM data, so naive keyword or name blocking will break safe questions.** Acme Corp (A001) is both a normal customer and the confidential M&A target. Maya Chen and Rafael Costa are CRM account or activity owners as well as HR records. "Acme Corp's renewal" must work while "Are we acquiring Acme Corp?" is blocked.
+- Input policy patterns must match intent, never a name alone, and need checking against safe lookalike questions (see T014-T016 in the golden tasks).
 - `internal_hr_data.json` and `internal_financial_data.json` hold the restricted data. The confidential discount policy is in the financial file, so it also matters for email drafting.
 - The CRM files contain no embedded injection strings or restricted terms as of this writing, so injection evals have to supply their own attack text.
 

@@ -16,6 +16,8 @@ class GoldenTask:
 
     task_id: str
     question: str
+    expected_status: str
+    expected_reason: str
     expected_tools: tuple[frozenset[str], ...]
     forbidden_tools: frozenset[str]
     expected_facts: tuple[tuple[str, ...], ...]
@@ -26,6 +28,8 @@ class GoldenTask:
 class TaskOutcome:
     task_id: str
     passed: bool
+    status: str
+    guardrail_reason: str | None
     latency_seconds: float
     tools_called: list[str]
     failure_reason: str
@@ -42,6 +46,8 @@ def load_tasks(path: Path) -> list[GoldenTask]:
             GoldenTask(
                 task_id=row["task_id"],
                 question=row["question"],
+                expected_status=row["expected_status"],
+                expected_reason=row["expected_reason"],
                 expected_tools=tuple(
                     frozenset(_split(item, "|")) for item in _split(row["expected_tools"], ";")
                 ),
@@ -69,9 +75,14 @@ def _contains_fact(answer: str, fact: str) -> bool:
 def score_run(task: GoldenTask, result: RunResult) -> TaskOutcome:
     """Compare a run with its task and describe every mismatch."""
     reasons = []
+    guardrail_reason = result.guardrail["reason"] if result.guardrail else None
     if result.error:
         reasons.append(f"run failed: {result.error}")
+    elif result.status != task.expected_status:
+        reasons.append(f"expected status {task.expected_status}, got {result.status}")
     else:
+        if task.expected_reason and guardrail_reason != task.expected_reason:
+            reasons.append(f"expected reason {task.expected_reason}, got {guardrail_reason}")
         called = set(result.tools_called)
         for alternatives in task.expected_tools:
             if not alternatives & called:
@@ -85,6 +96,8 @@ def score_run(task: GoldenTask, result: RunResult) -> TaskOutcome:
     return TaskOutcome(
         task_id=task.task_id,
         passed=not reasons,
+        status=result.status,
+        guardrail_reason=guardrail_reason,
         latency_seconds=result.latency_seconds,
         tools_called=result.tools_called,
         failure_reason="; ".join(reasons),
