@@ -26,7 +26,7 @@ htmlcov/
 !/logs/.gitkeep
 /traces/*
 !/traces/.gitkeep
-/data/email_outbox.json
+/data/outbox/
 
 # Local editor, OS and Claude Code settings
 .DS_Store
