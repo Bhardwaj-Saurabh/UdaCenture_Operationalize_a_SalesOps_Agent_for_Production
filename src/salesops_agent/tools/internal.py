@@ -1,9 +1,4 @@
-"""Restricted internal data tools carried over from the prototype.
-
-These return raw HR and financial records, so they are disabled in
-config/agent.yaml. Files are read only when a tool is called, which means a normal
-run never loads restricted data. Step 5 adds the guardrails that block these calls.
-"""
+"""Internal HR and financial data tools carried over from the prototype."""
 
 import json
 from pathlib import Path
@@ -18,12 +13,12 @@ def build_internal_tools(restricted_dir: Path) -> list[BaseTool]:
 
     @tool
     def lookup_internal_hr_data(query: str) -> dict[str, Any]:
-        """Look up restricted internal HR data."""
+        """Look up internal HR data. Prototype-only tool. Not production safe."""
         return {"query": query, "data": read("internal_hr_data.json")}
 
     @tool
     def lookup_internal_financial_data(query: str) -> dict[str, Any]:
-        """Look up confidential internal financial data."""
+        """Look up internal financial data. Prototype-only tool. Not production safe."""
         return {"query": query, "data": read("internal_financial_data.json")}
 
     return [lookup_internal_hr_data, lookup_internal_financial_data]

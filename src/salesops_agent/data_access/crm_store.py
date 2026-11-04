@@ -1,6 +1,5 @@
 """In-memory access to the approved CRM data files."""
 
-import difflib
 import json
 import re
 from dataclasses import dataclass
@@ -9,15 +8,14 @@ from typing import Any
 
 Record = dict[str, Any]
 
-CLOSED_STAGES = {"Closed Won", "Closed Lost"}
-FUZZY_MATCH_CUTOFF = 0.82
 
-
-def normalize_name(value: str) -> str:
-    """Lowercase a name and drop punctuation and legal suffixes such as "Inc."."""
-    value = re.sub(r"[^a-z0-9\s]", " ", value.lower())
+def normalize_lookup_text(value: str) -> str:
+    """Normalize names and IDs for forgiving lookups."""
+    value = value.lower().strip()
+    value = re.sub(r"[^a-z0-9\s]", " ", value)
     value = re.sub(r"\b(incorporated|inc|corp|corporation|ltd|limited|llc|co|company)\b", "", value)
-    return re.sub(r"\s+", " ", value).strip()
+    value = re.sub(r"\s+", " ", value).strip()
+    return value
 
 
 def _load_records(path: Path) -> list[Record]:
@@ -45,36 +43,41 @@ class CrmStore:
             product_usage=_load_records(directory / "product_usage.json"),
         )
 
-    def find_accounts(self, name_or_id: str) -> list[Record]:
-        """Return accounts matching an ID or name, from the strictest match type that hits.
+    def find_account_by_id(self, account_id: str) -> Record | None:
+        """Look up an account by exact account ID, case-insensitive."""
+        account_id_normalized = account_id.strip().lower()
+        return next(
+            (a for a in self.accounts if a["account_id"].lower() == account_id_normalized), None
+        )
 
-        More than one result means the input is ambiguous, so callers should ask
-        which account was meant instead of picking one.
-        """
-        account_id = name_or_id.strip().lower()
-        by_id = [a for a in self.accounts if a["account_id"].lower() == account_id]
-        if by_id:
-            return by_id
+    def find_account_by_name(self, name: str) -> Record | None:
+        """Look up an account by name using forgiving matching."""
+        query = normalize_lookup_text(name)
 
-        query = normalize_name(name_or_id)
-        if not query:
-            return []
+        # Exact normalized match
+        for account in self.accounts:
+            if query == normalize_lookup_text(account["name"]):
+                return account
 
-        names = {normalize_name(a["name"]): a for a in self.accounts}
-        if query in names:
-            return [names[query]]
+        # Partial normalized match in either direction
+        for account in self.accounts:
+            account_name = normalize_lookup_text(account["name"])
+            if query and (query in account_name or account_name in query):
+                return account
 
-        partial = [
-            account
-            for name, account in names.items()
-            if re.search(rf"\b{re.escape(query)}", name)
-            or re.search(rf"\b{re.escape(name)}\b", query)
-        ]
-        if partial:
-            return partial
+        # Fuzzy fallback for small typos
+        normalized_names = {normalize_lookup_text(a["name"]): a for a in self.accounts}
+        matches = difflib.get_close_matches(query, normalized_names.keys(), n=1, cutoff=0.82)
+        if matches:
+            return normalized_names[matches[0]]
 
-        close = difflib.get_close_matches(query, names, n=1, cutoff=FUZZY_MATCH_CUTOFF)
-        return [names[match] for match in close]
+        return None
+
+    def resolve_account(self, account_name_or_id: str) -> Record | None:
+        """Resolve an account by ID or name."""
+        return self.find_account_by_id(account_name_or_id) or self.find_account_by_name(
+            account_name_or_id
+        )
 
     def contacts_for(self, account_id: str) -> list[Record]:
         return [c for c in self.contacts if c["account_id"] == account_id]

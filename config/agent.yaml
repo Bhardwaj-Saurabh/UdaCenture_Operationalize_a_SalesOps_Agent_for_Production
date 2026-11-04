@@ -9,14 +9,15 @@ model:
   temperature: 0
 
 tools:
-  # Only these tools are given to the agent. The restricted internal tools and
-  # send_email stay off until the guardrails and approval gate exist (Step 5).
   enabled:
     - lookup_account
     - lookup_account_context
     - list_open_opportunities
     - summarize_pipeline
+    - lookup_internal_hr_data
+    - lookup_internal_financial_data
     - draft_email
+    - send_email
 
 # Relative paths resolve from the project root.
 paths:
