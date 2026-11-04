@@ -6,6 +6,7 @@ import re
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from salesops_agent.agent.runner import RunResult
 
@@ -22,6 +23,8 @@ class GoldenTask:
     forbidden_tools: frozenset[str]
     expected_facts: tuple[tuple[str, ...], ...]
     rationale: str
+    scripted_tool: str
+    scripted_args: dict[str, Any]
 
 
 @dataclass(frozen=True)
@@ -32,6 +35,7 @@ class TaskOutcome:
     guardrail_reason: str | None
     latency_seconds: float
     tools_called: list[str]
+    tools_blocked: list[str]
     failure_reason: str
 
 
@@ -56,6 +60,8 @@ def load_tasks(path: Path) -> list[GoldenTask]:
                     tuple(_split(item, "|")) for item in _split(row["expected_facts"], ";")
                 ),
                 rationale=row["rationale"],
+                scripted_tool=row["scripted_tool"],
+                scripted_args=json.loads(row["scripted_args"] or "{}"),
             )
             for row in csv.DictReader(file)
         ]
@@ -100,6 +106,7 @@ def score_run(task: GoldenTask, result: RunResult) -> TaskOutcome:
         guardrail_reason=guardrail_reason,
         latency_seconds=result.latency_seconds,
         tools_called=result.tools_called,
+        tools_blocked=list(result.tools_blocked),
         failure_reason="; ".join(reasons),
     )
 

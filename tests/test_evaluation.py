@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 
 from salesops_agent.agent.runner import run_question
 from salesops_agent.config import load_config
+from salesops_agent.evaluation.scripted_model import scripted_tool_call_model
 from salesops_agent.evaluation.suite import load_tasks, score_run, write_report
 
 load_dotenv(override=True)
@@ -21,6 +22,11 @@ def outcomes():
 
 @pytest.mark.parametrize("task", TASKS, ids=[task.task_id for task in TASKS])
 def test_golden_task(task, outcomes):
-    outcome = score_run(task, run_question(CONFIG, task.question))
+    model = (
+        scripted_tool_call_model(task.scripted_tool, task.scripted_args)
+        if task.scripted_tool
+        else None
+    )
+    outcome = score_run(task, run_question(CONFIG, task.question, model))
     outcomes.append(outcome)
     assert outcome.passed, outcome.failure_reason
