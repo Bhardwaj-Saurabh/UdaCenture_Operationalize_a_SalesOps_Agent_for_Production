@@ -1,0 +1,18 @@
+* 1f4da60 (HEAD -> main, origin/main) Document versioned components in CLAUDE.md
+* a79ebe4 Add version numbers to config and tools, and versioned tool input schemas
+* ddd1ba2 Update CLAUDE.md for the Step 1 project structure
+* 0cbcd27 Remove CODEOWNERS
+* 887af0c Restore prototype prompt, tool list and tool behaviour
+* be404f4 Remove tests, lint config and dev dependencies
+* 14d580b Add agent creation and python -m entry point
+* 3862a77 Refactor notebook data access and tools into separate modules
+* f873dda Extract system prompt and agent settings into versioned files
+* 5ccdb31 Keep Jupyter kernel in dev dependencies and exclude starter from lint
+* 064fd1d Create project structure with uv packaging and separated CRM and restricted data
+* f6bb084 Initial LangChain setup and first run of notebook
+* d6e72f5 Add .gitignore for secrets, virtualenv, caches and runtime output
+* d6e20c6 Add CLAUDE.md with project guidance for Claude Code
+* 640790c (upstream/main, upstream/HEAD) Updated starter README to have info about what student README should contain.
+* eff46a5 Updated README
+* 632a0df Adding project starter code
+* 49f957e Initial commit
