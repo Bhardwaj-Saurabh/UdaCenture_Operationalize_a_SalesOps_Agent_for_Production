@@ -28,6 +28,8 @@ class ModelSettings(_Section):
 
 
 class ToolSettings(_Section):
+    version: str
+    schema_version: str
     enabled: tuple[str, ...]
 
 
@@ -42,6 +44,7 @@ class PathSettings(_Section):
 
 
 class AppConfig(_Section):
+    version: str
     agent: AgentSettings
     model: ModelSettings
     tools: ToolSettings

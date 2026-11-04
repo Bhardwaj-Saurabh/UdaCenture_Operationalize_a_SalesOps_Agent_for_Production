@@ -1,4 +1,6 @@
 # Runtime configuration for the SalesOps agent. Secrets stay in .env.
+version: 1.0.0
+
 agent:
   prompt:
     name: salesops_system
@@ -9,6 +11,8 @@ model:
   temperature: 0
 
 tools:
+  version: 1.0.0
+  schema_version: v1
   enabled:
     - lookup_account
     - lookup_account_context

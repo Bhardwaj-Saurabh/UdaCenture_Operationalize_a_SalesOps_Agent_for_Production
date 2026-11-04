@@ -5,6 +5,11 @@ from typing import Any
 from langchain_core.tools import BaseTool, tool
 
 from salesops_agent.data_access.crm_store import CrmStore
+from salesops_agent.schemas.v1 import (
+    AccountLookupInput,
+    ListOpenOpportunitiesInput,
+    SummarizePipelineInput,
+)
 
 
 def account_context(store: CrmStore, account_name_or_id: str) -> dict[str, Any]:
@@ -25,7 +30,7 @@ def account_context(store: CrmStore, account_name_or_id: str) -> dict[str, Any]:
 
 
 def build_crm_tools(store: CrmStore) -> list[BaseTool]:
-    @tool
+    @tool(args_schema=AccountLookupInput)
     def lookup_account(account_name_or_id: str) -> dict[str, Any]:
         """Look up a B2B account by account ID or account name."""
         account = store.resolve_account(account_name_or_id)
@@ -33,12 +38,12 @@ def build_crm_tools(store: CrmStore) -> list[BaseTool]:
             return {"error": f"No account found for {account_name_or_id}"}
         return account
 
-    @tool
+    @tool(args_schema=AccountLookupInput)
     def lookup_account_context(account_name_or_id: str) -> dict[str, Any]:
         """Return account context including contacts, opportunities, activities, tickets, and product usage."""
         return account_context(store, account_name_or_id)
 
-    @tool
+    @tool(args_schema=ListOpenOpportunitiesInput)
     def list_open_opportunities(stage: str | None = None) -> list[dict[str, Any]]:
         """List open opportunities, optionally filtered by stage."""
         closed_stages = {"Closed Won", "Closed Lost"}
@@ -47,7 +52,7 @@ def build_crm_tools(store: CrmStore) -> list[BaseTool]:
             results = [o for o in results if o["stage"].lower() == stage.lower()]
         return results
 
-    @tool
+    @tool(args_schema=SummarizePipelineInput)
     def summarize_pipeline() -> dict[str, Any]:
         """Summarize opportunity count and value by stage."""
         summary: dict[str, dict[str, Any]] = {}

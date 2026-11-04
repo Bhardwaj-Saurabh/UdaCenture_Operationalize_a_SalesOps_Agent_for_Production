@@ -7,11 +7,12 @@ from typing import Any
 from langchain_core.tools import BaseTool, tool
 
 from salesops_agent.data_access.crm_store import CrmStore
+from salesops_agent.schemas.v1 import DraftEmailInput, SendEmailInput
 from salesops_agent.tools.crm import account_context
 
 
 def build_email_tools(store: CrmStore, outbox_path: Path) -> list[BaseTool]:
-    @tool
+    @tool(args_schema=DraftEmailInput)
     def draft_email(account_name_or_id: str, purpose: str) -> dict[str, Any]:
         """Draft a follow-up email for an account's primary contact."""
         context = account_context(store, account_name_or_id)
@@ -39,7 +40,7 @@ def build_email_tools(store: CrmStore, outbox_path: Path) -> list[BaseTool]:
             "status": "drafted",
         }
 
-    @tool
+    @tool(args_schema=SendEmailInput)
     def send_email(to: str, subject: str, body: str) -> dict[str, Any]:
         """Fake-send an email by appending it to a local JSON outbox."""
         outbox = (

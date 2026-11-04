@@ -4,13 +4,29 @@ from langchain_core.tools import BaseTool
 
 from salesops_agent.config import AppConfig
 from salesops_agent.data_access.crm_store import CrmStore
+from salesops_agent.schemas.v1 import SCHEMA_VERSION
+from salesops_agent.tools import TOOLS_VERSION
 from salesops_agent.tools.crm import build_crm_tools
 from salesops_agent.tools.email import build_email_tools
 from salesops_agent.tools.internal import build_internal_tools
 
 
 def build_tools(config: AppConfig, store: CrmStore) -> list[BaseTool]:
-    """Return the enabled tools in config order. Unknown names raise ValueError."""
+    """Return the enabled tools in config order.
+
+    Raises ValueError for unknown tool names, or if the config pins a tool or schema
+    version that differs from the code.
+    """
+    if config.tools.version != TOOLS_VERSION:
+        raise ValueError(
+            f"Config pins tools {config.tools.version}, but the code provides {TOOLS_VERSION}"
+        )
+    if config.tools.schema_version != SCHEMA_VERSION:
+        raise ValueError(
+            f"Config pins schemas {config.tools.schema_version}, "
+            f"but the code provides {SCHEMA_VERSION}"
+        )
+
     available = {
         built.name: built
         for built in [
