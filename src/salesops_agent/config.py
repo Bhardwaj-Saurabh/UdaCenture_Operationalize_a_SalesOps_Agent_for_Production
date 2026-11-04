@@ -33,11 +33,16 @@ class ToolSettings(_Section):
     enabled: tuple[str, ...]
 
 
+class GuardrailSettings(_Section):
+    input_policy_version: str
+
+
 class PathSettings(_Section):
     crm_data: Path
     restricted_data: Path
     outbox: Path
     prompts: Path
+    guardrails: Path
     logs: Path
     traces: Path
     reports: Path
@@ -49,6 +54,7 @@ class AppConfig(_Section):
     agent: AgentSettings
     model: ModelSettings
     tools: ToolSettings
+    guardrails: GuardrailSettings
     paths: PathSettings
 
 

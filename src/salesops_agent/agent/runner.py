@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 
 from salesops_agent.agent.factory import create_salesops_agent
 from salesops_agent.config import AppConfig
+from salesops_agent.guardrails.input import GUARDRAIL_KEY
 from salesops_agent.observability.run_log import write_run_log
 from salesops_agent.observability.trace import write_trace
 
@@ -19,6 +20,7 @@ class RunResult:
     error: str | None
     tools_called: list[str]
     latency_seconds: float
+    guardrail: dict[str, str] | None = None
 
 
 def run_question(config: AppConfig, question: str) -> RunResult:
@@ -29,6 +31,7 @@ def run_question(config: AppConfig, question: str) -> RunResult:
     messages = []
     answer = None
     error = None
+    guardrail = None
 
     try:
         agent = create_salesops_agent(config)
@@ -37,11 +40,13 @@ def run_question(config: AppConfig, question: str) -> RunResult:
         for state in agent.stream(request, stream_mode="values"):
             messages = state["messages"]
         answer = messages[-1].content
+        guardrail = messages[-1].additional_kwargs.get(GUARDRAIL_KEY)
     except Exception as exc:
         error = f"{type(exc).__name__}: {exc}"
 
     latency_seconds = round(time.perf_counter() - started, 3)
-    status = "failed" if error else "success"
+    status = "failed" if error else "blocked" if guardrail else "success"
+    interventions = [guardrail] if guardrail else []
     tool_calls = [
         {"name": call["name"], "args": call["args"]}
         for message in messages
@@ -59,6 +64,7 @@ def run_question(config: AppConfig, question: str) -> RunResult:
             "status": status,
             "tools_called": tools_called,
             "latency_seconds": latency_seconds,
+            "guardrail_interventions": interventions,
             "error": error,
         },
     )
@@ -78,6 +84,7 @@ def run_question(config: AppConfig, question: str) -> RunResult:
             "model": config.model.name,
             "input": question,
             "tool_calls": tool_calls,
+            "guardrail_interventions": interventions,
             "status": status,
             "final_output": answer,
             "error": error,
@@ -90,4 +97,5 @@ def run_question(config: AppConfig, question: str) -> RunResult:
         error=error,
         tools_called=tools_called,
         latency_seconds=latency_seconds,
+        guardrail=guardrail,
     )

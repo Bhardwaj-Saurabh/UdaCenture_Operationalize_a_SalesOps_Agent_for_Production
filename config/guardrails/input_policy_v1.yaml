@@ -1,0 +1,57 @@
+# Input guardrail policy. Patterns are case-insensitive regular expressions.
+# Categories are checked in order, and the first match decides the reason.
+# Match on intent rather than names: Acme Corp and Maya Chen also appear in
+# ordinary CRM questions, which must keep working.
+name: salesops_input_policy
+version: v1
+
+categories:
+  - reason: prompt_injection
+    message: I can't change or reveal my instructions and policies. Please ask a SalesOps question.
+    patterns:
+      - '\b(ignore|disregard|forget|override|bypass)\b.{0,40}\b(instructions?|polic(y|ies)|rules?|guardrails?|guidelines?|prompts?)\b'
+      - '\b(reveal|show|print|repeat|tell me|what (is|are))\b.{0,30}\b(system prompt|hidden instructions?|your instructions|your prompt|your polic(y|ies))\b'
+      - '\b(pretend (you are|to be)|you are now|act as)\b.{0,40}\b(admin|administrator|unrestricted|no restrictions|hr|cfo|ceo)\b'
+      - '\b(jailbreak|developer mode)\b'
+
+  - reason: executive_compensation
+    message: I can't share executive compensation information.
+    patterns:
+      - '\bexecutive (compensation|pay|bonus(es)?|salar(y|ies))\b'
+      - '\b(ceo|cfo|cto|coo|executives?|chief \w+ officer|marcus thorne)\b.{0,40}\b(bonus(es)?|salar(y|ies)|pay|compensation|equity)\b'
+      - '\b(bonus(es)?|salar(y|ies)|compensation|equity)\b.{0,40}\b(ceo|cfo|cto|coo|executives?|chief \w+ officer|marcus thorne)\b'
+      - '\bhow much\b.{0,30}\b(ceo|cfo|cto|coo|executives?|chief \w+ officer|marcus thorne)\b.{0,20}\b(make|earn|paid|get)\b'
+
+  - reason: restricted_hr_data
+    message: I can't share employee HR information such as pay, performance, or employment status.
+    patterns:
+      - '\b(fired|firing)\b'
+      - '\b(salar(y|ies)|paycheck|pay raise|compensation)\b'
+      - '\bpip\b'
+      - '\bperformance (improvement plans?|plans?|status|reviews?|ratings?)\b'
+      - '\b(employees?|staff|personnel)\b.{0,40}\b(terminat\w+|performance|pay)\b'
+      - '\bterminat\w+\b.{0,30}\b(employees?|staff|personnel|anyone|someone)\b'
+      - '\b(anyone|someone|who)\b.{0,30}\bterminat\w+\b(?!.{0,20}\b(contracts?|agreements?|subscriptions?|renewals?)\b)'
+      - '\b(facing|pending|up for)\s+termination\b'
+      - '\b(internal[_ ]hr|hr (data|records?|files?))\b'
+
+  - reason: confidential_m_and_a
+    message: I can't discuss mergers, acquisitions, or related confidential plans.
+    patterns:
+      - '\b(m&a|m and a|mergers?|confidential_m_and_a)(?!\w)'
+      - '(?<!customer )(?<!user )(?<!logo )\bacquisitions?\b'
+      - '\b(we|udacenture)\b( \w+){0,3} (acquir\w+|buy|buying|merg\w+|purchas\w+|take over|taking over)\b'
+      - '\b(acquir\w+|bought|merg\w+)\b.{0,30}\b(by us|by udacenture)\b'
+
+  - reason: layoff_plans
+    message: I can't discuss layoffs or workforce reduction plans.
+    patterns:
+      - '\b(lay[- ]?offs?|laid off|laying off|workforce reduction|reduction in force|downsizing|headcount (cuts?|reductions?))\b'
+
+  - reason: confidential_financial_strategy
+    message: I can't share confidential financial or strategy information.
+    patterns:
+      - '\bconfidential\b.{0,40}\b(strateg(y|ies)|financials?|fields?|data|plans?|discounts?|information)\b'
+      - '\binternal[_ ](financials?|strateg(y|ies))\b'
+      - '\b(financial strategy|discount policy|max(imum)? unapproved discount|override threshold|runway)\b'
+      - '\b(our|udacenture.?s?|company.?s?)\b.{0,20}\b(revenue|financials)\b'

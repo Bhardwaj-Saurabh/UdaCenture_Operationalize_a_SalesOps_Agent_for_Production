@@ -1,5 +1,5 @@
 # Runtime configuration for the SalesOps agent. Secrets stay in .env.
-version: 1.1.0
+version: 1.2.0
 
 agent:
   prompt:
@@ -23,12 +23,16 @@ tools:
     - draft_email
     - send_email
 
+guardrails:
+  input_policy_version: v1
+
 # Relative paths resolve from the project root.
 paths:
   crm_data: data/crm
   restricted_data: data/restricted
   outbox: data/outbox/email_outbox.json
   prompts: prompts
+  guardrails: config/guardrails
   logs: logs
   traces: traces
   reports: reports

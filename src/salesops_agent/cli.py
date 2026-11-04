@@ -23,6 +23,8 @@ def main() -> int:
         print(f"Run {result.run_id} failed: {result.error}", file=sys.stderr)
         return 1
     print(result.answer)
+    if result.guardrail:
+        print(f"Blocked by guardrail: {result.guardrail['reason']}", file=sys.stderr)
     print(f"Run ID: {result.run_id}", file=sys.stderr)
     return 0
 
