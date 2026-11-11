@@ -1,4 +1,6 @@
-* c7f9818 (HEAD -> main, origin/main) Rewrite README as complete project documentation and move the brief to docs
+* 86d1283 (HEAD -> main, origin/main) Complete cost tracking: cost alert, per-task tokens, cost tests and a monitoring report with full cost coverage
+* 7fd599f Regenerate GITLOG.txt from git history
+* c7f9818 Rewrite README as complete project documentation and move the brief to docs
 * 6c90a44 Regenerate GITLOG.txt from git history
 * 562320b Fix stale command note in CLAUDE.md
 * 2bc7523 Regenerate GITLOG.txt from git history
