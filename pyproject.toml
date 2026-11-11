@@ -20,6 +20,7 @@ dev = [
 
 [project.scripts]
 salesops-agent = "salesops_agent.cli:main"
+generate-monitoring-report = "salesops_agent.reporting.monitoring:main"
 
 [build-system]
 requires = ["hatchling"]
