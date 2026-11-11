@@ -1,0 +1,51 @@
+# Tool guardrail policy, checked before every tool call.
+# Any block ends the run, so the model can't work around it with another tool.
+name: salesops_data_access_policy
+version: v2
+
+# Default deny: a tool that isn't listed here can't run, whatever the model asks for.
+allowed_tools:
+  - lookup_account
+  - lookup_account_context
+  - list_open_opportunities
+  - summarize_pipeline
+  - run_crm_analysis
+  - draft_email
+
+restricted_tools:
+  - lookup_internal_hr_data
+  - lookup_internal_financial_data
+
+# These pause the run for a human decision before they execute. Only an explicit
+# "approve" lets the call run; anything else is treated as a rejection.
+approval_required_tools:
+  - send_email
+
+# Code passed to these tools is checked by the sandbox rules before it runs.
+code_tools:
+  - run_crm_analysis
+
+# Tool arguments matching these are outside the SalesOps task, even on allowed tools.
+restricted_argument_patterns:
+  - '\b(salar(y|ies)|bonus(es)?|compensation|equity|payroll)\b'
+  - '\bconfidential'
+  - '\b(lay[- ]?offs?|m&a|mergers?|(?<!customer )(?<!user )(?<!logo )acquisitions?)\b'
+  - '\b(pip|performance_status|hr)\b'
+  - '\binternal[_ ]'
+  - '\b(ceo|cfo|coo)\b'
+
+# A tool result containing any of these is withheld from the model.
+restricted_output_fields:
+  - salary_usd
+  - equity_bonus_usd
+  - performance_status
+  - confidential_strategy
+  - CONFIDENTIAL_
+
+messages:
+  restricted_internal_data: That internal data is restricted and can't be accessed.
+  tool_not_allowed: That action isn't permitted.
+  approval_rejected: The email was not sent, because approval was rejected.
+  out_of_scope_request: That request is outside the allowed SalesOps data.
+  restricted_output_field: The result contained restricted data and was withheld.
+  unsafe_code: That code was rejected by the sandbox rules.

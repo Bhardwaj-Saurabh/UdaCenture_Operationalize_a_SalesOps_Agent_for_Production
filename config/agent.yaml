@@ -1,5 +1,5 @@
 # Runtime configuration for the SalesOps agent. Secrets stay in .env.
-version: 1.5.0
+version: 1.6.0
 
 agent:
   prompt:
@@ -26,7 +26,7 @@ tools:
 
 guardrails:
   input_policy_version: v1
-  tool_policy_version: v1
+  tool_policy_version: v2
   output_policy_version: v1
 
 # Limits for run_crm_analysis. The timeout includes starting the sandbox process.

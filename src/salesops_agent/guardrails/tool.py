@@ -11,6 +11,7 @@ import yaml
 from langchain.agents.middleware import AgentMiddleware, AgentState, hook_config
 from langchain_core.messages import AIMessage, ToolMessage
 from langgraph.runtime import Runtime
+from langgraph.types import interrupt
 
 from salesops_agent.guardrails.input import GUARDRAIL_KEY, REFUSAL_KEY
 from salesops_agent.sandbox import validate_code
@@ -52,9 +53,7 @@ def check_tool_call(name: str, args: dict[str, Any], policy: ToolPolicy) -> str 
     """Return the reason to block a proposed call, or None to allow it."""
     if name in policy.restricted_tools:
         return "restricted_internal_data"
-    if name in policy.approval_required_tools:
-        return "approval_required"
-    if name not in policy.allowed_tools:
+    if name not in policy.allowed_tools and name not in policy.approval_required_tools:
         return "tool_not_allowed"
     if name in policy.code_tools and not validate_code(str(args.get("code", "")))[0]:
         return "unsafe_code"
@@ -69,7 +68,8 @@ def has_restricted_field(output: str, policy: ToolPolicy) -> bool:
 
 
 class ToolGuardrail(AgentMiddleware):
-    """Block tool calls by policy, then end the run before the model can try another route."""
+    """Block tool calls by policy, pause high-risk calls for approval, and end the run
+    on any block before the model can try another route."""
 
     def __init__(self, policy: ToolPolicy) -> None:
         super().__init__()
@@ -97,6 +97,13 @@ class ToolGuardrail(AgentMiddleware):
         reason = check_tool_call(name, request.tool_call["args"], self.policy)
         if reason:
             return self._blocked(name, call_id, reason)
+
+        # The approval gate sits here because every tool call passes through this
+        # method, so no other tool path can reach the action without a decision.
+        if name in self.policy.approval_required_tools:
+            decision = interrupt({"action": name, "args": request.tool_call["args"]})
+            if not (isinstance(decision, dict) and decision.get("type") == "approve"):
+                return self._blocked(name, call_id, "approval_rejected")
 
         result = handler(request)
         # A second check in case a permitted tool ever returns restricted data.
