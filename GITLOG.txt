@@ -1,4 +1,9 @@
-* 9413bd9 (HEAD -> main, origin/main) Add output guardrail scenarios to the evaluation suite
+* 5dffd09 (HEAD -> main, origin/main) Let T022 pass when the model asks for clarification instead of calling the HR tool
+* 9d1f0cc Document sandboxed execution in README
+* 5e6de27 Add sandbox scenarios to the evaluation suite
+* 195ef8f Add sandboxed CRM analysis tool with code checks, process isolation and timeout
+* 96a949a Regenerate GITLOG.txt from git history
+* 9413bd9 Add output guardrail scenarios to the evaluation suite
 * db2e4d4 Add output guardrail that blocks restricted responses and unsafe email content
 * c2bd897 Regenerate GITLOG.txt from git history
 * 39a40bc Add tool guardrail scenarios to the evaluation suite
