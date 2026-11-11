@@ -1,4 +1,7 @@
-* ad3a101 (HEAD -> main, origin/main) Document logging and tracing in README
+* 1a76dbf (HEAD -> main, origin/main) Document the monitoring report in README
+* 9100db4 Add generate-monitoring-report command that aggregates run logs into a Markdown report
+* f598cc7 Regenerate GITLOG.txt from git history
+* ad3a101 Document logging and tracing in README
 * 075ab3a Add redacted step-by-step traces, token cost estimates and task IDs to run logs
 * c3c676f Regenerate GITLOG.txt from git history
 * e2e3297 Document the human-in-the-loop workflow in README
