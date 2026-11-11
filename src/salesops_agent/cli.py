@@ -19,10 +19,13 @@ def main() -> int:
         choices=["approve", "reject"],
         help="decision for any action that needs human approval, such as sending an email",
     )
+    ask.add_argument("--task-id", help="optional task ID recorded in the log and trace")
     args = parser.parse_args()
 
     load_dotenv(override=True)
-    result = run_question(load_config(), args.question, approval=args.approval)
+    result = run_question(
+        load_config(), args.question, approval=args.approval, task_id=args.task_id
+    )
 
     if result.error:
         print(f"Run {result.run_id} failed: {result.error}", file=sys.stderr)

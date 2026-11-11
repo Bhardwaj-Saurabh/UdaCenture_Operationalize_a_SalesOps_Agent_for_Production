@@ -39,6 +39,7 @@ class TaskOutcome:
     tools_called: list[str]
     tools_blocked: list[str]
     hitl: dict[str, Any] | None
+    estimated_cost_usd: float
     failure_reason: str
 
 
@@ -118,6 +119,7 @@ def score_run(task: GoldenTask, result: RunResult) -> TaskOutcome:
         tools_called=result.tools_called,
         tools_blocked=list(result.tools_blocked),
         hitl=result.hitl,
+        estimated_cost_usd=result.estimated_cost_usd,
         failure_reason="; ".join(reasons),
     )
 
@@ -127,6 +129,7 @@ def write_report(path: Path, outcomes: list[TaskOutcome]) -> None:
     total = len(outcomes)
     passed = sum(outcome.passed for outcome in outcomes)
     latency = sum(outcome.latency_seconds for outcome in outcomes)
+    cost = sum(outcome.estimated_cost_usd for outcome in outcomes)
     report = {
         "generated_at": datetime.now(UTC).isoformat(),
         "summary": {
@@ -135,6 +138,8 @@ def write_report(path: Path, outcomes: list[TaskOutcome]) -> None:
             "failed": total - passed,
             "pass_rate": round(passed / total, 3) if total else 0,
             "average_latency_seconds": round(latency / total, 3) if total else 0,
+            "total_estimated_cost_usd": round(cost, 6),
+            "average_estimated_cost_usd": round(cost / total, 6) if total else 0,
         },
         "tasks": [asdict(outcome) for outcome in outcomes],
     }

@@ -44,6 +44,13 @@ class SandboxSettings(_Section):
     max_output_chars: int
 
 
+class ObservabilitySettings(_Section):
+    cost_per_1k_input_tokens: float
+    cost_per_1k_output_tokens: float
+    max_trace_output_chars: int
+    redact_fields: tuple[str, ...]
+
+
 class PathSettings(_Section):
     crm_data: Path
     restricted_data: Path
@@ -63,6 +70,7 @@ class AppConfig(_Section):
     tools: ToolSettings
     guardrails: GuardrailSettings
     sandbox: SandboxSettings
+    observability: ObservabilitySettings
     paths: PathSettings
 
 

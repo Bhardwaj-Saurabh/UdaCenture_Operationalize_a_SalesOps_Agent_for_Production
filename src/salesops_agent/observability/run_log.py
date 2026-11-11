@@ -1,4 +1,4 @@
-"""Append one JSON line per agent run."""
+"""Append one JSON line per agent run to logs/runs.jsonl."""
 
 import json
 from pathlib import Path
