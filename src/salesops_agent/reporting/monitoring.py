@@ -92,6 +92,10 @@ def _pct(part: int, whole: int) -> str:
     return f"{part / whole:.1%}" if whole else "n/a"
 
 
+def _runs(count: int) -> str:
+    return f"{count} run" if count == 1 else f"{count} runs"
+
+
 def _p95(values: list[float]) -> float:
     """95th percentile, using the largest value when there are fewer than 20 runs."""
     ordered = sorted(values)
@@ -171,15 +175,15 @@ def _table(headers: list[str], rows: list[list[Any]]) -> str:
     return "\n".join(lines)
 
 
-def _highlights(m: dict[str, Any]) -> list[str]:
+def _highlights(m: dict[str, Any], cost_alert_usd: float) -> list[str]:
     """Plain-language observations, so the reader does not have to work them out."""
     notes = []
     total, statuses = m["total"], m["statuses"]
     if statuses["failed"]:
         reason, count = m["failures"].most_common(1)[0]
         notes.append(
-            f"{statuses['failed']} runs failed ({m['failure_rate']}). The most common cause "
-            f"({count} runs) was `{reason}`."
+            f"{_runs(statuses['failed'])} failed ({m['failure_rate']}). The most common cause "
+            f"({_runs(count)}) was `{reason}`."
         )
     if m["guardrail_blocked_runs"]:
         reason, count = m["block_reasons"].most_common(1)[0]
@@ -201,6 +205,17 @@ def _highlights(m: dict[str, Any]) -> list[str]:
             f"{h['requested']} runs asked for approval: {h['approved']} approved, "
             f"{h['rejected']} rejected, {h['pending']} left without a decision."
         )
+    model_run_cost = m["cost"]["average_model_run"]
+    if model_run_cost > cost_alert_usd:
+        notes.append(
+            f"Cost alert: runs that call the model average ${model_run_cost:.4f}, above the "
+            f"${cost_alert_usd:.2f} threshold set in `config/agent.yaml`."
+        )
+    else:
+        notes.append(
+            f"Runs that call the model average ${model_run_cost:.6f}, within the "
+            f"${cost_alert_usd:.2f} cost threshold."
+        )
     if m["cost"]["runs_with_cost"] < total:
         notes.append(
             f"Cost covers {m['cost']['runs_with_cost']} of {total} runs; the rest were "
@@ -209,7 +224,9 @@ def _highlights(m: dict[str, Any]) -> list[str]:
     return notes
 
 
-def render_report(m: dict[str, Any], log_path: Path, skipped: int) -> str:
+def render_report(
+    m: dict[str, Any], log_path: Path, skipped: int, cost_alert_usd: float = 0.05
+) -> str:
     total = m["total"]
     generated = datetime.now(UTC).isoformat(timespec="seconds")
     if total == 0:
@@ -227,7 +244,7 @@ def render_report(m: dict[str, Any], log_path: Path, skipped: int) -> str:
         f"Generated {generated} from `{log_path}`. Covers {total} runs from "
         f"{m['first'][:19]} to {m['last'][:19]} UTC. {m['evaluation_runs']} of them have a task "
         "ID (evaluation suite runs, or CLI runs with `--task-id`).",
-        "## Highlights\n\n" + "\n".join(f"- {note}" for note in _highlights(m)),
+        "## Highlights\n\n" + "\n".join(f"- {note}" for note in _highlights(m, cost_alert_usd)),
         "## Summary\n\n"
         + _table(
             ["Metric", "Value"],
@@ -338,7 +355,10 @@ def main() -> int:
     loaded = load_runs(args.log)
     metrics = compute_metrics(loaded.records)
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(render_report(metrics, args.log, loaded.skipped_lines), encoding="utf-8")
+    report = render_report(
+        metrics, args.log, loaded.skipped_lines, config.observability.cost_alert_per_run_usd
+    )
+    args.output.write_text(report, encoding="utf-8")
     print(f"Wrote {args.output} from {metrics['total']} runs.")
     return 0
 

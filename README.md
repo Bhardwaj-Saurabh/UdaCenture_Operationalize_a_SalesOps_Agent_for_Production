@@ -13,7 +13,7 @@ This project takes the prototype notebook in `starter/project_starter.ipynb`, wh
 
 The original project brief is in [docs/project_brief.md](docs/project_brief.md).
 
-**Current status:** 40 of 42 evaluation tasks pass, and all 19 sandbox tests pass (`reports/evaluation_report.json`). The two failing tasks, T004 and T005, are known agent defects that were kept on purpose. See [Known Limitations](#known-limitations).
+**Current status:** 40 of 42 evaluation tasks pass (`reports/evaluation_report.json`), and all 19 sandbox tests and 8 monitoring and cost tests pass. The two failing tasks, T004 and T005, are known agent defects that were kept on purpose. See [Known Limitations](#known-limitations).
 
 ## Contents
 
@@ -94,6 +94,7 @@ cp .env.example .env
 | Run the evaluation suite and sandbox tests | `uv run pytest` |
 | Run one evaluation task | `uv run pytest -k T004` |
 | Run only the sandbox tests | `uv run pytest tests/test_sandbox.py` |
+| Run only the monitoring and cost tests | `uv run pytest tests/test_monitoring.py` |
 | Generate the monitoring report | `uv run generate-monitoring-report` |
 | Regenerate the Git log | `git log --oneline --decorate --graph --all > GITLOG.txt` |
 
@@ -155,7 +156,7 @@ salesops-agent ask "..." [--approval approve|reject]
 
 | Component | Where | Current version |
 |---|---|---|
-| Configuration | `config/agent.yaml` (`version`) | `1.7.0` |
+| Configuration | `config/agent.yaml` (`version`) | `1.8.0` |
 | System prompt | `prompts/salesops_system/v1.md`, selected by `agent.prompt` | `v1` |
 | Tools | `TOOLS_VERSION` in `src/salesops_agent/tools/__init__.py`, pinned by `tools.version` | `1.1.0` |
 | Tool input schemas | `src/salesops_agent/schemas/v1.py`, pinned by `tools.schema_version` | `v1` |
@@ -200,6 +201,8 @@ In the facts and tool columns, `;` separates required items and `|` separates ac
 | A rejected email action is not completed | T038, T040 |
 
 `tests/test_sandbox.py` adds 19 sandbox tests: safe analysis, 13 rejected code patterns, the timeout, the output cap, missing built-ins and the approved table list.
+
+`tests/test_monitoring.py` adds 8 tests, following the reference project's `test_monitor.py`. They check the cost formula, cost totals and averages, older log formats, outcome rates, latency, tool counts, HITL counts and the cost alert.
 
 ## Guardrail Design
 
@@ -434,7 +437,7 @@ Options:
 
 | Section | Metrics |
 |---|---|
-| Highlights | Plain-language observations generated from the numbers below |
+| Highlights | Plain-language observations generated from the numbers below, including a cost alert |
 | Summary | Total runs, success rate, failure rate, average latency, estimated total cost, estimated average cost per run, guardrail blocks, HITL approvals and rejections |
 | Outcomes | Runs and share for each status: answered, blocked, failed, awaiting approval |
 | Latency | Average across all runs and across answered runs, median, 95th percentile, slowest |
@@ -455,6 +458,7 @@ Options:
 - **Guardrail blocks depend on the traffic.** The evaluation suite deliberately sends many attack scenarios, so a high block rate there is expected. In real use, a sudden rise in blocks could mean users are probing the system, or that a policy is blocking legitimate questions. Check the reasons and compare them with the safe lookalike tasks (T014–T016).
 - **Average latency is skewed by blocks.** Blocked inputs finish in about 0.01 seconds without calling the model, which pulls the overall average and the median down. "Average (answered runs)" and the 95th percentile show what users actually wait for.
 - **Cost is an estimate.** It is token counts multiplied by the rates in `config/agent.yaml`, which are OpenAI list prices for `gpt-4.1-mini`. Runs that never call the model cost $0, so "Average per run that called the model" is the better figure for budgeting.
+- **Cost alert:** Highlights flags a cost alert when the average cost of runs that call the model exceeds `observability.cost_alert_per_run_usd`. This is $0.05 by default, the same threshold the reference project uses. Otherwise it says the cost is within the threshold.
 - **Tool calls show model behavior.** A high `Blocked` count for a tool shows what the model keeps trying to do. For example, it repeatedly reached for the internal data tools, because the prompt still says "You may use internal tools if needed."
 - **HITL pending:** a pending approval means someone asked the agent to send an email without giving a decision. Nothing was sent.
 - **Data notes:** runs logged before cost tracking was added are left out of the cost figures, and the report says how many. Starting a fresh `logs/runs.jsonl` gives figures that cover every run.
@@ -462,7 +466,7 @@ Options:
 ## Known Limitations
 
 **Agent defects (kept as baseline failures)**
-- **Crash on unknown accounts (T005):** `find_account_by_name` calls `difflib` without importing it, so an account name with no match crashes the run with `NameError` instead of answering "not found". This causes 11 of the 12 failures in the current monitoring report.
+- **Crash on unknown accounts (T005):** `find_account_by_name` calls `difflib` without importing it, so an account name with no match crashes the run with `NameError` instead of answering "not found". This is the only failure in the current monitoring report.
 - **Miscounting (T004):** the model sometimes counts by hand with `list_open_opportunities` instead of using `run_crm_analysis`. For example, it reported 26 Negotiation opportunities instead of 23.
 - **Wrong account matches:** fuzzy matching returns the first partial match, so "a" resolves to Acme Corp.
 - **Pipeline totals:** `summarize_pipeline` includes Closed Won and Closed Lost deals.
@@ -476,7 +480,7 @@ Options:
 
 **Operations**
 - **Cost:** cost uses OpenAI list prices for `gpt-4.1-mini`, which may differ from your provider's prices.
-- **Monitoring data:** the committed monitoring report covers the development history in `logs/runs.jsonl`. Most of those runs were logged before cost tracking, so cost covers only 47 of 292 runs.
+- **Monitoring data:** the committed monitoring report is built from one full evaluation run (42 runs), so every run has cost data. The earlier development history, logged before cost tracking, was moved to `logs/archive/` and `traces/archive/` (both gitignored), and the report does not read it.
 - **Evaluation:** the suite has 42 tasks, each run once. Live tasks can vary between runs, so the pass rate is a rough signal. Pass rates rose mainly because guardrail tasks were added, not because the agent's answers improved.
 - **Scale:** the app serves a single user, loads JSON files into memory, and has no authentication, users or roles.
 

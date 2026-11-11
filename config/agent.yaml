@@ -1,5 +1,5 @@
 # Runtime configuration for the SalesOps agent. Secrets stay in .env.
-version: 1.7.0
+version: 1.8.0
 
 agent:
   prompt:
@@ -40,6 +40,8 @@ observability:
   cost_per_1k_input_tokens: 0.0004
   cost_per_1k_output_tokens: 0.0016
   max_trace_output_chars: 2000
+  # The monitoring report flags runs that call the model and cost more than this on average.
+  cost_alert_per_run_usd: 0.05
   # Fields whose values are always replaced in logs and traces, on top of the tool
   # policy's restricted fields. A name ending in "_" matches as a prefix.
   redact_fields:

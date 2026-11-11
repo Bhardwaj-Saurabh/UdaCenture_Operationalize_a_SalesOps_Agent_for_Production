@@ -48,6 +48,7 @@ class ObservabilitySettings(_Section):
     cost_per_1k_input_tokens: float
     cost_per_1k_output_tokens: float
     max_trace_output_chars: int
+    cost_alert_per_run_usd: float
     redact_fields: tuple[str, ...]
 
 
