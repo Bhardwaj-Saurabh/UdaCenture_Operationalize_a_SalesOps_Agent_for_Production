@@ -4,9 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current state
 
-This is a Udacity project: turn a prototype SalesOps agent into a production-ready Python app. Steps 1-7 are done: the notebook is refactored into a Python package that keeps the prototype's behavior, including its unsafe tools and known bugs. **Update this file as the project takes shape, especially the commands and architecture sections.**
+This is a Udacity project: turn a prototype SalesOps agent into a production-ready Python app. Steps 1-8 are done: the notebook is refactored into a Python package that keeps the prototype's behavior, including its unsafe tools and known bugs. **Update this file as the project takes shape, especially the commands and architecture sections.**
 
-- `README.md`: the full project brief (Steps 1-8), not yet the project's own README, plus the `## Sandboxed Execution`, `## Human-in-the-Loop Workflow`, `## Logging and Tracing`, and `## Monitoring Report` sections added before `## License`. Read the relevant step before implementing it.
+- `README.md`: the project's own documentation, covering setup, commands, architecture, versions, evaluation, each control, limitations, and hardening. Keep it in step with code changes, especially the version table, task ranges, and current pass counts.
+- `docs/project_brief.md`: the original project brief (Steps 1-8). Read the relevant step before changing a requirement.
 - `starter/README.md`: the list of what the final student README must contain.
 - `starter/`: the original notebook and its data, kept as reference. `data/` is what the app reads.
 - `src/salesops_agent/`: the package. `agent/factory.py` builds the agent, `tools/registry.py` selects tools from the config, and `data_access/crm_store.py` holds CRM lookups.
