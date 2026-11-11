@@ -561,6 +561,55 @@ The tests in `tests/test_sandbox.py` cover safe analysis, each rejected pattern,
 - **Timeout includes startup:** starting the sandbox process takes about 1–2 seconds of the 10-second limit, and the process start adds that delay to each call.
 - **The model must choose the tool:** it still sometimes counts by hand instead. For example, it used `list_open_opportunities` for task T004 and miscounted.
 
+## Human-in-the-Loop Workflow
+
+### Which actions require approval
+
+`send_email` requires approval, because it is the only customer-facing action and the only tool that writes to the outbox. The list is `approval_required_tools` in `config/guardrails/tool_policy_v2.yaml`, so other high-risk tools can be added there.
+
+`draft_email` needs no approval. It only returns a draft and sends nothing.
+
+### How approval is simulated
+
+The decision is given on the command line:
+
+```bash
+uv run salesops-agent ask "Draft and send a follow-up email to Acme Corp"                     # no decision
+uv run salesops-agent ask "Draft and send a follow-up email to Acme Corp" --approval approve
+uv run salesops-agent ask "Draft and send a follow-up email to Acme Corp" --approval reject
+```
+
+The pause and resume are real. A command-line flag stands in for the reviewer:
+
+1. The model proposes `send_email`, and the tool guardrail (`src/salesops_agent/guardrails/tool.py`) calls LangGraph's `interrupt()` before the tool runs. The run pauses, and an in-memory checkpointer holds its state. The approval request holds the action and the full email: recipient, subject and body.
+2. The runner (`src/salesops_agent/agent/runner.py`) resumes the run with the `--approval` decision, using `Command(resume={"type": "approve" | "reject"})`.
+3. Without `--approval`, the run stops there. The status is `awaiting_approval`, nothing is sent, and the CLI asks you to rerun with a decision.
+
+Anything other than an explicit `approve` is treated as a rejection. One decision covers one action: if the agent tries to send a second email in the same run, that one stays pending.
+
+**Order of checks:** the email content check (5.3) runs before approval is requested. An email with an invented discount, a legal commitment or acquisition details is rejected without being shown to the reviewer, because approving it should not be possible.
+
+**No bypass:** the gate cannot be bypassed by choosing another tool path. It sits in `wrap_tool_call`, which every tool call passes through, and only `send_email` writes to the outbox. Tools not on the allowlist are denied, so `finalize_email` is rejected, for example. Sandbox code cannot write files. Evaluation tasks T041 and T042 test both routes.
+
+### What happens on approval
+
+`send_email` runs and appends the email to `data/outbox/email_outbox.json`. That file is gitignored, because this project only simulates sending. The agent then confirms that the email was sent. The run's status is `success`.
+
+### What happens on rejection
+
+`send_email` does not run and the outbox is unchanged. The run ends at once with "The email was not sent, because approval was rejected.", so the model cannot try another route. The status is `blocked`, with the reason `approval_rejected`.
+
+### What is recorded
+
+Every run records the approval outcome in two places:
+
+| Where | What it shows |
+|---|---|
+| `logs/runs.jsonl` | `hitl: {"approval_requested", "action", "decision"}` |
+| `traces/<run_id>.json` | The full approval request, including the email the reviewer was asked about, and each tool call's outcome (`ran`, `blocked` or `pending`) |
+
+Evaluation tasks T019, T023 and T037–T040 cover the three paths (no decision, approve, reject) with both scripted and live model runs.
+
 ## License
 
 [License](LICENSE.txt)
