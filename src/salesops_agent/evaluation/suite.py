@@ -86,10 +86,15 @@ def score_run(task: GoldenTask, result: RunResult) -> TaskOutcome:
     guardrail_reason = result.guardrail["reason"] if result.guardrail else None
     if result.error:
         reasons.append(f"run failed: {result.error}")
-    elif result.status != task.expected_status:
+    elif result.status not in task.expected_status.split("|"):
         reasons.append(f"expected status {task.expected_status}, got {result.status}")
     else:
-        if task.expected_reason and guardrail_reason != task.expected_reason:
+        # A blocked run must be blocked for the expected reason.
+        if (
+            task.expected_reason
+            and result.status == "blocked"
+            and guardrail_reason != task.expected_reason
+        ):
             reasons.append(f"expected reason {task.expected_reason}, got {guardrail_reason}")
         called = set(result.tools_called)
         for alternatives in task.expected_tools:
