@@ -692,6 +692,53 @@ As a check, both restricted data files were passed through the redactor and no s
 
 For example, task T005 fails with `NameError: name 'difflib' is not defined`. Its trace shows the model calling `lookup_account` with `"Zzzqqq Nonexistent"` as its last step, which points to the account lookup code.
 
+## Monitoring Report
+
+### How to generate the report
+
+```bash
+uv run generate-monitoring-report
+```
+
+The command reads every run in `logs/runs.jsonl` and works out the metrics. It takes about a second and makes no model calls. Each agent run adds to the log, so run the command again whenever you want fresh numbers. The code is `src/salesops_agent/reporting/monitoring.py`.
+
+Options:
+- `--log <path>`: read a different log file.
+- `--output <path>`: write the report somewhere else.
+
+### Where the report is saved
+
+`reports/monitoring_report.md`. It is a local Markdown file, and no external monitoring service is involved.
+
+### Which metrics it includes
+
+| Section | Metrics |
+|---|---|
+| Highlights | Plain-language observations generated from the numbers below |
+| Summary | Total runs, success rate, failure rate, average latency, estimated total cost, estimated average cost per run, guardrail blocks, HITL approvals and rejections |
+| Outcomes | Runs and share for each status: answered, blocked, failed, awaiting approval |
+| Latency | Average across all runs and across answered runs, median, 95th percentile, slowest |
+| Cost | Estimated total, average per run, average per run that called the model, token totals |
+| Tool calls | For each tool, how many calls ran and how many were blocked |
+| Guardrail blocks | Blocks by layer (input, tool, output) and by reason |
+| Human-in-the-loop | Approvals requested, approved, rejected, pending |
+| Common failure reasons | The five most frequent errors, with counts |
+| Data notes | Runs logged in an older format, and any unreadable lines skipped |
+
+### How to interpret the results
+
+- **Success and failure:** every run ends in one of four statuses, and the shares add up to 100%.
+    - The **success rate** counts runs the agent answered.
+    - The **failure rate** counts only runs that crashed with an error.
+    - A guardrail block, a rejected approval and a pending approval are neither: they are the controls working as intended.
+- **Failure rate is the number to watch.** It means the system broke rather than declined. "Common failure reasons" shows where to look. For example, `NameError: name 'difflib' is not defined` points to the account lookup bug behind evaluation task T005.
+- **Guardrail blocks depend on the traffic.** The evaluation suite deliberately sends many attack scenarios, so a high block rate there is expected. In real use, a sudden rise in blocks could mean users are probing the system, or that a policy is blocking legitimate questions. Check the reasons and compare them with the safe lookalike tasks (T014–T016).
+- **Average latency is skewed by blocks.** Blocked inputs finish in about 0.01 seconds without calling the model, which pulls the overall average and the median down. "Average (answered runs)" and the 95th percentile show what users actually wait for.
+- **Cost is an estimate.** It is token counts multiplied by the rates in `config/agent.yaml`, which are OpenAI list prices for `gpt-4.1-mini`. Runs that never call the model cost $0, so "Average per run that called the model" is the better figure for budgeting.
+- **Tool calls show model behavior.** A high `Blocked` count for a tool shows what the model keeps trying to do. For example, it repeatedly reached for the internal data tools, because the prompt still says "You may use internal tools if needed."
+- **HITL pending:** a pending approval means someone asked the agent to send an email without giving a decision. Nothing was sent.
+- **Data notes:** runs logged before cost tracking was added are left out of the cost figures, and the report says how many. Starting a fresh `logs/runs.jsonl` gives figures that cover every run.
+
 ## License
 
 [License](LICENSE.txt)

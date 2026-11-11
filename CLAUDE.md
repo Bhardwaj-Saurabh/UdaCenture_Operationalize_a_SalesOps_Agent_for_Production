@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current state
 
-This is a Udacity project: turn a prototype SalesOps agent into a production-ready Python app. Steps 1-6 are done: the notebook is refactored into a Python package that keeps the prototype's behavior, including its unsafe tools and known bugs. **Update this file as the project takes shape, especially the commands and architecture sections.**
+This is a Udacity project: turn a prototype SalesOps agent into a production-ready Python app. Steps 1-7 are done: the notebook is refactored into a Python package that keeps the prototype's behavior, including its unsafe tools and known bugs. **Update this file as the project takes shape, especially the commands and architecture sections.**
 
-- `README.md`: the full project brief (Steps 1-8), not yet the project's own README, plus the `## Sandboxed Execution`, `## Human-in-the-Loop Workflow`, and `## Logging and Tracing` sections added before `## License`. Read the relevant step before implementing it.
+- `README.md`: the full project brief (Steps 1-8), not yet the project's own README, plus the `## Sandboxed Execution`, `## Human-in-the-Loop Workflow`, `## Logging and Tracing`, and `## Monitoring Report` sections added before `## License`. Read the relevant step before implementing it.
 - `starter/README.md`: the list of what the final student README must contain.
 - `starter/`: the original notebook and its data, kept as reference. `data/` is what the app reads.
 - `src/salesops_agent/`: the package. `agent/factory.py` builds the agent, `tools/registry.py` selects tools from the config, and `data_access/crm_store.py` holds CRM lookups.
@@ -16,7 +16,7 @@ This is a Udacity project: turn a prototype SalesOps agent into a production-rea
 - A new tool must be added to `allowed_tools` in the tool policy as well as the config, because the policy denies by default.
 - `src/salesops_agent/sandbox.py` runs `run_crm_analysis` code in a separate process: an `ast` check first, then safe built-ins, approved CRM tables only, a timeout, and capped output. The tool guardrail runs the same check (`unsafe_code`). It must be started from a real file, because a `spawn` child cannot re-import a script piped through stdin.
 - Approval gate: `tool.py` calls `interrupt()` for `approval_required_tools` (in `tool_policy_v2.yaml`) before the tool runs. `agent/runner.py` builds the agent with an `InMemorySaver` and resumes with `Command(resume={"type": ...})`. Run statuses are `success`, `blocked`, `failed`, and `awaiting_approval`. Each traced tool call has an `outcome` of `ran`, `blocked`, or `pending`.
-- `src/salesops_agent/reporting/`: a placeholder with no code yet.
+- `src/salesops_agent/reporting/monitoring.py` builds `reports/monitoring_report.md` from `logs/runs.jsonl`. It reads older log formats too (`error` instead of `failure_reason`, missing `hitl` and token fields), and counts reviewer rejections (`approval_rejected`) under HITL rather than as guardrail blocks.
 - `config/agent.yaml`: config version, model, prompt version, tool and schema versions, enabled tools, and paths. Secrets stay in `.env` (see `.env.example`).
 - `prompts/<name>/<version>.md`: versioned prompts, selected in the config.
 - `schemas/v1.py` and `TOOLS_VERSION` in `tools/__init__.py` (both under `src/salesops_agent/`): tool input schemas and the tool version. `tools/registry.py` refuses to build tools if the config pins different versions, so bump both together.
@@ -28,6 +28,7 @@ This is a Udacity project: turn a prototype SalesOps agent into a production-rea
 uv sync
 uv run salesops-agent ask "Summarize the current sales pipeline by stage."
 uv run salesops-agent ask "Draft and send a follow-up email to Acme Corp" --approval approve   # or reject
+uv run generate-monitoring-report   # writes reports/monitoring_report.md from logs/runs.jsonl
 ```
 
 Run the evaluation suite and the sandbox tests with `uv run pytest`, or one task with `uv run pytest -k T004`. It makes real model calls and writes `reports/evaluation_report.json`. There is no linter, and the notebook kernel is not installed in `.venv`.
@@ -37,7 +38,6 @@ Tasks are in `data/evaluation/golden_tasks.csv`, where `;` separates required it
 The brief specifies these commands, which do not exist yet:
 
 ```bash
-uv run generate-monitoring-report   # Step 7, writes reports/monitoring_report.md
 git log --oneline --decorate --graph --all > GITLOG.txt
 ```
 
