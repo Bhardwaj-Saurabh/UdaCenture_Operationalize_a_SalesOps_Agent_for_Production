@@ -6,6 +6,7 @@ from salesops_agent.config import AppConfig
 from salesops_agent.data_access.crm_store import CrmStore
 from salesops_agent.schemas.v1 import SCHEMA_VERSION
 from salesops_agent.tools import TOOLS_VERSION
+from salesops_agent.tools.analysis import build_analysis_tools
 from salesops_agent.tools.crm import build_crm_tools
 from salesops_agent.tools.email import build_email_tools
 from salesops_agent.tools.internal import build_internal_tools
@@ -31,6 +32,7 @@ def build_tools(config: AppConfig, store: CrmStore) -> list[BaseTool]:
         built.name: built
         for built in [
             *build_crm_tools(store),
+            *build_analysis_tools(store, config.sandbox),
             *build_email_tools(store, config.paths.outbox),
             *build_internal_tools(config.paths.restricted_data),
         ]

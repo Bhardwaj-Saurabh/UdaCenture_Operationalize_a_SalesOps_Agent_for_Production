@@ -9,6 +9,7 @@ allowed_tools:
   - lookup_account_context
   - list_open_opportunities
   - summarize_pipeline
+  - run_crm_analysis
   - draft_email
 
 restricted_tools:
@@ -18,6 +19,10 @@ restricted_tools:
 # These stay blocked until the approval gate exists (Step 5.5).
 approval_required_tools:
   - send_email
+
+# Code passed to these tools is checked by the sandbox rules before it runs.
+code_tools:
+  - run_crm_analysis
 
 # Tool arguments matching these are outside the SalesOps task, even on allowed tools.
 restricted_argument_patterns:
@@ -42,3 +47,4 @@ messages:
   approval_required: The email was not sent, because sending requires human approval.
   out_of_scope_request: That request is outside the allowed SalesOps data.
   restricted_output_field: The result contained restricted data and was withheld.
+  unsafe_code: That code was rejected by the sandbox rules.

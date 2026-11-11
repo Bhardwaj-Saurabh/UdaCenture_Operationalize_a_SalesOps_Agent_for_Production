@@ -26,6 +26,10 @@ class DraftEmailInput(BaseModel):
     purpose: str
 
 
+class CrmAnalysisInput(BaseModel):
+    code: str
+
+
 class SendEmailInput(BaseModel):
     to: str
     subject: str

@@ -39,6 +39,11 @@ class GuardrailSettings(_Section):
     output_policy_version: str
 
 
+class SandboxSettings(_Section):
+    timeout_seconds: float
+    max_output_chars: int
+
+
 class PathSettings(_Section):
     crm_data: Path
     restricted_data: Path
@@ -57,6 +62,7 @@ class AppConfig(_Section):
     model: ModelSettings
     tools: ToolSettings
     guardrails: GuardrailSettings
+    sandbox: SandboxSettings
     paths: PathSettings
 
 

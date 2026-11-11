@@ -13,6 +13,7 @@ from langchain_core.messages import AIMessage, ToolMessage
 from langgraph.runtime import Runtime
 
 from salesops_agent.guardrails.input import GUARDRAIL_KEY, REFUSAL_KEY
+from salesops_agent.sandbox import validate_code
 
 
 @dataclass(frozen=True)
@@ -21,6 +22,7 @@ class ToolPolicy:
     allowed_tools: frozenset[str]
     restricted_tools: frozenset[str]
     approval_required_tools: frozenset[str]
+    code_tools: frozenset[str]
     restricted_argument_patterns: tuple[re.Pattern[str], ...]
     restricted_output_fields: tuple[str, ...]
     messages: dict[str, str]
@@ -37,6 +39,7 @@ def load_tool_policy(policy_dir: Path, version: str) -> ToolPolicy:
         allowed_tools=frozenset(raw["allowed_tools"]),
         restricted_tools=frozenset(raw["restricted_tools"]),
         approval_required_tools=frozenset(raw["approval_required_tools"]),
+        code_tools=frozenset(raw["code_tools"]),
         restricted_argument_patterns=tuple(
             re.compile(pattern, re.IGNORECASE) for pattern in raw["restricted_argument_patterns"]
         ),
@@ -53,6 +56,8 @@ def check_tool_call(name: str, args: dict[str, Any], policy: ToolPolicy) -> str 
         return "approval_required"
     if name not in policy.allowed_tools:
         return "tool_not_allowed"
+    if name in policy.code_tools and not validate_code(str(args.get("code", "")))[0]:
+        return "unsafe_code"
     arguments = json.dumps(args)
     if any(pattern.search(arguments) for pattern in policy.restricted_argument_patterns):
         return "out_of_scope_request"

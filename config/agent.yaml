@@ -1,5 +1,5 @@
 # Runtime configuration for the SalesOps agent. Secrets stay in .env.
-version: 1.4.0
+version: 1.5.0
 
 agent:
   prompt:
@@ -11,13 +11,14 @@ model:
   temperature: 0
 
 tools:
-  version: 1.0.0
+  version: 1.1.0
   schema_version: v1
   enabled:
     - lookup_account
     - lookup_account_context
     - list_open_opportunities
     - summarize_pipeline
+    - run_crm_analysis
     - lookup_internal_hr_data
     - lookup_internal_financial_data
     - draft_email
@@ -27,6 +28,11 @@ guardrails:
   input_policy_version: v1
   tool_policy_version: v1
   output_policy_version: v1
+
+# Limits for run_crm_analysis. The timeout includes starting the sandbox process.
+sandbox:
+  timeout_seconds: 10
+  max_output_chars: 4000
 
 # Relative paths resolve from the project root.
 paths:
