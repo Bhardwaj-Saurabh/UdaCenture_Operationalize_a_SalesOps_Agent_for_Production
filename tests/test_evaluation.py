@@ -30,6 +30,6 @@ def test_golden_task(task, outcomes):
         model = scripted_tool_call_model(task.scripted_tool, task.scripted_args)
     elif task.scripted_answer:
         model = scripted_answer_model(task.scripted_answer)
-    outcome = score_run(task, run_question(CONFIG, task.question, model))
+    outcome = score_run(task, run_question(CONFIG, task.question, model, task.approval))
     outcomes.append(outcome)
     assert outcome.passed, outcome.failure_reason

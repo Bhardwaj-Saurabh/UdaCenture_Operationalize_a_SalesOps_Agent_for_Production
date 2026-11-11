@@ -26,6 +26,7 @@ class GoldenTask:
     scripted_tool: str
     scripted_args: dict[str, Any]
     scripted_answer: str
+    approval: str | None
 
 
 @dataclass(frozen=True)
@@ -37,6 +38,7 @@ class TaskOutcome:
     latency_seconds: float
     tools_called: list[str]
     tools_blocked: list[str]
+    hitl: dict[str, Any] | None
     failure_reason: str
 
 
@@ -64,6 +66,7 @@ def load_tasks(path: Path) -> list[GoldenTask]:
                 scripted_tool=row["scripted_tool"],
                 scripted_args=json.loads(row["scripted_args"] or "{}"),
                 scripted_answer=row["scripted_answer"],
+                approval=row["approval"] or None,
             )
             for row in csv.DictReader(file)
         ]
@@ -114,6 +117,7 @@ def score_run(task: GoldenTask, result: RunResult) -> TaskOutcome:
         latency_seconds=result.latency_seconds,
         tools_called=result.tools_called,
         tools_blocked=list(result.tools_blocked),
+        hitl=result.hitl,
         failure_reason="; ".join(reasons),
     )
 
