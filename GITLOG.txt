@@ -1,4 +1,7 @@
-* 39a40bc (HEAD -> main, origin/main) Add tool guardrail scenarios to the evaluation suite
+* 9413bd9 (HEAD -> main, origin/main) Add output guardrail scenarios to the evaluation suite
+* db2e4d4 Add output guardrail that blocks restricted responses and unsafe email content
+* c2bd897 Regenerate GITLOG.txt from git history
+* 39a40bc Add tool guardrail scenarios to the evaluation suite
 * a66cc29 Add tool guardrail that blocks forbidden tool calls before execution
 * 84380c7 Regenerate GITLOG.txt from git history
 * b5cab8b Add input guardrail scenarios to the evaluation suite
