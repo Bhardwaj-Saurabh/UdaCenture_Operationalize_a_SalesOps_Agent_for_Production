@@ -1,4 +1,6 @@
-* 562320b (HEAD -> main, origin/main) Fix stale command note in CLAUDE.md
+* c7f9818 (HEAD -> main, origin/main) Rewrite README as complete project documentation and move the brief to docs
+* 6c90a44 Regenerate GITLOG.txt from git history
+* 562320b Fix stale command note in CLAUDE.md
 * 2bc7523 Regenerate GITLOG.txt from git history
 * 1a76dbf Document the monitoring report in README
 * 9100db4 Add generate-monitoring-report command that aggregates run logs into a Markdown report
