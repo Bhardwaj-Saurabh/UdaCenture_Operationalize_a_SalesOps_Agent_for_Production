@@ -35,7 +35,7 @@ Run the evaluation suite and the sandbox tests with `uv run pytest`, or one task
 
 Tasks are in `data/evaluation/golden_tasks.csv`, where `;` separates required items and `|` separates alternatives. Scoring is in `src/salesops_agent/evaluation/suite.py`. Tasks with `scripted_tool` or `scripted_answer` use a fake model that returns exactly that, so they are repeatable and make no API calls. T004 (the model miscounts) and T005 (the `difflib` crash) are known failures that were kept on purpose. `expected_status` accepts alternatives with `|`, and the `approval` column passes a decision. Approved email tasks write to the gitignored outbox on every run. T022 allows `blocked|success`, because the live model sometimes asks a clarifying question instead of trying the HR tool. Either way the HR tool must not run. Running a subset with `-k` overwrites the report with only those tasks, so run the full suite before committing the report. The report includes estimated cost per task and in total.
 
-The brief specifies these commands, which do not exist yet:
+Regenerate `GITLOG.txt` after the last commit before submitting:
 
 ```bash
 git log --oneline --decorate --graph --all > GITLOG.txt
