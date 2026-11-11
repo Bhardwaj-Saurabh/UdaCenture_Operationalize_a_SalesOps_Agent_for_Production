@@ -12,7 +12,7 @@ from langchain.agents.middleware import AgentMiddleware, AgentState, hook_config
 from langchain_core.messages import AIMessage, ToolMessage
 from langgraph.runtime import Runtime
 
-from salesops_agent.guardrails.input import GUARDRAIL_KEY
+from salesops_agent.guardrails.input import GUARDRAIL_KEY, REFUSAL_KEY
 
 
 @dataclass(frozen=True)
@@ -105,5 +105,6 @@ class ToolGuardrail(AgentMiddleware):
     def before_model(self, state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
         for message in state["messages"]:
             if isinstance(message, ToolMessage) and GUARDRAIL_KEY in message.additional_kwargs:
-                return {"messages": [AIMessage(content=message.content)], "jump_to": "end"}
+                refusal = AIMessage(content=message.content, additional_kwargs={REFUSAL_KEY: True})
+                return {"messages": [refusal], "jump_to": "end"}
         return None

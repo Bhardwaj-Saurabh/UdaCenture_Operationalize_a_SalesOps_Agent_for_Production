@@ -1,0 +1,61 @@
+# Output guardrail policy, checked on the final response and on customer-facing
+# email content before it is sent.
+#
+# Chosen behavior: block the whole response and return a safe refusal. Partial
+# redaction was rejected because surrounding text can still reveal what was removed.
+#
+# Categories are checked in order, and the first match decides the reason.
+# Patterns are case-insensitive regular expressions that match restricted facts,
+# never a name alone, because names like Maya Chen also appear in CRM answers.
+name: salesops_output_policy
+version: v1
+
+# Tools whose arguments reach a customer, so they are checked before they run.
+customer_facing_tools:
+  - send_email
+
+response_message: The response contained restricted information and was withheld.
+email_message: The email was not sent, because its content broke the email policy.
+
+categories:
+  - reason: raw_sensitive_fields
+    patterns:
+      - '\b(salary_usd|equity_bonus_usd|performance_status|confidential_strategy|planned_reduction|affected_departments|max_unapproved_discount|executive_override_threshold|runway_months)\b'
+      - '\b(CONFIDENTIAL_\w+|internal_hr_data|internal_financial_data|restricted_internal|confidential_internal)\b'
+
+  - reason: executive_compensation
+    patterns:
+      - '\b(ceo|cfo|cto|coo|executives?|marcus thorne)\b.{0,60}\b(salar(y|ies)|bonus(es)?|equity|compensation|stock options?)\b'
+      - '\b(salar(y|ies)|bonus(es)?|compensation)\b.{0,60}\b(ceo|cfo|cto|coo|executives?|marcus thorne)\b'
+      - '\$\s?\d[\d,.]*\s?(k|m|million)?\b.{0,20}\b(equity )?bonus\b'
+
+  - reason: employee_performance_or_termination
+    patterns:
+      - '\b(exceeds|meets|below)[_ ]expectations\b'
+      - '\b(performance improvement plan|pip|termination warning|pending termination)\b'
+      - '\b(employees?|staff|account executives?|managers?)\b.{0,40}\b(terminat\w+|fired|let go)\b'
+      - '\b(fired|firing)\b'
+      - '\bsalar(y|ies)\b'
+
+  - reason: confidential_m_and_a
+    patterns:
+      - '\b(m&a|mergers?|acquisition (target|discussion|talks|negotiation))(?!\w)'
+      - '\b(we|udacenture)\b( \w+){0,4} (acquir\w+|merg\w+|buy|buying|take over|taking over)\b'
+      - '\bactive negotiation\b.{0,40}\bacqui\w+'
+      - '\b(acquir\w+|bought)\b.{0,30}\bby (us|udacenture)\b'
+
+  - reason: layoff_plans
+    patterns:
+      - '\b(lay[- ]?offs?|laid off|laying off|workforce reduction|reduction in force|headcount (cuts?|reductions?)|downsizing)\b'
+
+  - reason: restricted_internal_strategy
+    patterns:
+      - '\b(discount policy|unapproved discount|override threshold|financial strategy|internal (pricing|strategy))\b'
+      - '\b\d+\s?months? of runway\b|\brunway of\b'
+
+  - reason: unsafe_email_claims
+    patterns:
+      - '\b\d+(\.\d+)?\s?%\s?(off|discount)\b'
+      - '\b(discount|price reduction|free months?|waive\w*)\b.{0,30}\b(of|at)?\s?\d+(\.\d+)?\s?%'
+      - '\b(guarantee[ds]?|legally binding|contractual(ly)? (commit|obligat)\w*|indemnif\w*|full refund|we will refund|service credits?|penalt(y|ies))\b'
+      - '\bwe (commit|promise) to\b'

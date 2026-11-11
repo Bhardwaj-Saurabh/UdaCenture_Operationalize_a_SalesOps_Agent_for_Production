@@ -1,4 +1,4 @@
-"""A fake model that proposes one exact tool call, so tool guardrails can be tested repeatably."""
+"""Fake models that return exact output, so guardrails can be tested repeatably."""
 
 from typing import Any
 
@@ -17,3 +17,8 @@ def scripted_tool_call_model(tool: str, args: dict[str, Any]) -> _ScriptedModel:
     return _ScriptedModel(
         messages=iter([AIMessage(content="", tool_calls=[call]), AIMessage(content="Done.")])
     )
+
+
+def scripted_answer_model(answer: str) -> _ScriptedModel:
+    """Return this final answer without calling any tools."""
+    return _ScriptedModel(messages=iter([AIMessage(content=answer)]))

@@ -12,6 +12,8 @@ from langchain_core.messages import AIMessage
 from langgraph.runtime import Runtime
 
 GUARDRAIL_KEY = "guardrail"
+# Marks a refusal written by a guardrail, so later checks leave it alone.
+REFUSAL_KEY = "guardrail_refusal"
 
 
 @dataclass(frozen=True)
