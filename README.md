@@ -610,6 +610,88 @@ Every run records the approval outcome in two places:
 
 Evaluation tasks T019, T023 and T037–T040 cover the three paths (no decision, approve, reject) with both scripted and live model runs.
 
+## Logging and Tracing
+
+Every run writes one log line and one trace file, whether it succeeds, is blocked, fails, or waits for approval. That includes runs from `salesops-agent ask` and runs from the evaluation suite. The writing happens at the end of `run_question` in `src/salesops_agent/agent/runner.py`, using the modules in `src/salesops_agent/observability/`.
+
+### Where logs are stored
+
+`logs/runs.jsonl` holds one JSON object per line, one line per run, appended in order. It is meant for counting and comparing runs, and the monitoring report reads it.
+
+### Where traces are stored
+
+`traces/<run_id>.json` holds one file per run. It is meant for debugging a single run. The run ID is printed by the CLI, so a log line and its trace always share an ID.
+
+`logs/` and `traces/` are both gitignored. They stay on the machine that ran the agent.
+
+### What fields are captured
+
+**Run log (`logs/runs.jsonl`)**
+
+| Field | Meaning |
+|---|---|
+| `run_id`, `timestamp` | Unique run ID and UTC start time |
+| `task_id` | Evaluation task ID, or the CLI's `--task-id`; `null` if none |
+| `input` | The user's question, redacted |
+| `status` | `success`, `blocked`, `failed` or `awaiting_approval` |
+| `failure_reason` | The error message for a failed run, otherwise `null` |
+| `tools_called` / `tools_blocked` | Tools that actually ran, and proposed calls that a guardrail stopped |
+| `latency_seconds` | Wall-clock time for the whole run |
+| `input_tokens`, `output_tokens`, `estimated_cost_usd` | Token counts from the model responses, and their estimated cost |
+| `guardrail_interventions` | Each block, as `{status, reason, policy, tool}` |
+| `hitl` | `{approval_requested, action, decision}` |
+
+**Trace (`traces/<run_id>.json`)**
+
+The trace has everything in the log, plus:
+
+| Field | What it shows |
+|---|---|
+| `steps` | Each step of the run in order: the user message, every model turn with the tool calls it proposed, and every tool result, each marked `ran` or `blocked` with the guardrail decision |
+| `tool_calls` | Each proposed call with its arguments and outcome: `ran`, `blocked` or `pending` |
+| `available_tools` | Which tools were available to the agent |
+| `hitl.request` | The full approval request, including the email the reviewer was asked about |
+| `versions` | Config, prompt, tool, schema and guardrail policy versions |
+| `final_output` | The final answer |
+| `usage` | Tokens and cost |
+
+Tool outputs over 2,000 characters are cut off and marked with how much was removed. The limit is `observability.max_trace_output_chars` in `config/agent.yaml`.
+
+**About cost:** cost uses the rates in `config/agent.yaml` (`observability.cost_per_1k_input_tokens` and `cost_per_1k_output_tokens`). These are set to OpenAI's list prices for `gpt-4.1-mini`, so they are estimates. Replace them with your provider's actual rates. Runs that make no model call cost $0: blocked inputs and scripted evaluation tasks.
+
+### How sensitive data is redacted
+
+Everything written to a log or trace passes through `src/salesops_agent/observability/redaction.py` first. That covers the input, tool arguments, tool outputs, the approval request, the final answer and error messages.
+
+- **Restricted content:** text matching the output guardrail's policy (`config/guardrails/output_policy_v1.yaml`) is replaced with `[REDACTED:<reason>]`. This covers executive pay, employee performance or termination, M&A, layoffs, internal strategy, raw restricted field names and unsafe email claims. The rule is the same one the agent follows, so anything the agent may not say also stays out of logs and traces.
+- **Restricted fields:** values of these fields are replaced with `[REDACTED]` wherever they appear, at any depth. The list combines the tool policy's restricted fields, `observability.redact_fields` in the config, and any field whose name is itself restricted.
+- **Email addresses:** these are masked, for example `o***@acmecorp.example.com`.
+- **Removed answers:** when the output guardrail replaces an answer, the original is removed from the agent's state, so it never reaches the trace.
+
+As a check, both restricted data files were passed through the redactor and no salary, bonus, performance, termination, M&A, layoff or revenue values remained. The 109 CRM accounts came through unchanged.
+
+### How to inspect a failed run
+
+1. Find failed or blocked runs in the log:
+
+    ```bash
+    grep -E '"status": "(failed|blocked)"' logs/runs.jsonl
+    ```
+
+2. Copy the `run_id` and open its trace:
+
+    ```bash
+    python -m json.tool traces/<run_id>.json
+    ```
+
+3. In the trace, check these fields:
+    - `failure_reason`: the error.
+    - `steps`: what the model did before it stopped. The last `model` step's `tool_calls` shows the call that was in progress.
+    - `guardrail_interventions`: whether, and why, a guardrail blocked the run.
+    - `versions`: which prompt and policy versions were active.
+
+For example, task T005 fails with `NameError: name 'difflib' is not defined`. Its trace shows the model calling `lookup_account` with `"Zzzqqq Nonexistent"` as its last step, which points to the account lookup code.
+
 ## License
 
 [License](LICENSE.txt)
