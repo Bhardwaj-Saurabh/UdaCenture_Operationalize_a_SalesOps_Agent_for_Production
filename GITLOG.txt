@@ -1,4 +1,7 @@
-* e2e3297 (HEAD -> main, origin/main) Document the human-in-the-loop workflow in README
+* ad3a101 (HEAD -> main, origin/main) Document logging and tracing in README
+* 075ab3a Add redacted step-by-step traces, token cost estimates and task IDs to run logs
+* c3c676f Regenerate GITLOG.txt from git history
+* e2e3297 Document the human-in-the-loop workflow in README
 * 435d481 Add approval gate scenarios to the evaluation suite
 * bd7a999 Add human approval gate for sending email, with --approval approve or reject
 * 20c004f Regenerate GITLOG.txt from git history
