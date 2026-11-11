@@ -506,6 +506,61 @@ It should also explain what production hardening would still be needed before de
 
 The final README should cover architecture, operational decisions, limitations, and production hardening recommendations, which are required by the project rubric.
 
+## Sandboxed Execution
+
+The agent has one code execution tool, `run_crm_analysis`. The agent writes short Python snippets, and the tool runs them over approved CRM data and returns what they print. The code is in `src/salesops_agent/sandbox.py` and `src/salesops_agent/tools/analysis.py`, and the limits are set in `config/agent.yaml`.
+
+### What the tool can do
+
+It runs pandas analysis over five approved CRM tables: `accounts`, `opportunities`, `activities`, `support_tickets` and `product_usage`. Typical uses:
+
+- pipeline value by stage
+- counting open opportunities
+- average deal size
+- tickets by severity
+- comparing health scores with contract end dates
+
+`to_datetime`, `Timestamp` and a small set of built-ins (`len`, `sum`, `round`, `sorted` and similar) are available.
+
+### What it cannot do
+
+- **Restricted data:** it can't read internal HR or financial data. That data is never loaded into the sandbox, and the code can't open files.
+- **Contacts:** it can't read the contacts table, because no analysis needs personal details.
+- **Imports, files and network:** it can't import modules, read or write files, or open network connections.
+- **Python internals:** it can't call `eval`, `exec`, `open`, `__import__`, `getattr` or other built-ins outside the safe set.
+- **Long or large runs:** it can't run longer than the time limit or return more than the output limit.
+
+### Restrictions enforced
+
+| Requirement | How it is enforced |
+|---|---|
+| No unrestricted `eval` or `exec` | A syntax check (`ast`) rejects `eval`, `exec`, `compile` and `__import__` by name, and they are absent from the built-ins. Only the sandbox itself calls `exec`, on code that passed the check. |
+| No network access | No module that can reach the network is available. Inside the sandbox process, `socket` functions are also replaced so they raise an error. |
+| Timeout | The code runs in a separate process that is terminated after `sandbox.timeout_seconds` (10 seconds). |
+| Restricted imports | All `import` statements are rejected. |
+| Controlled input data | Only the five approved CRM tables are passed in, and any other table name raises an error. |
+| Controlled output format | The tool returns `{"status": "ok", "output": ...}` or `{"status": "error", "error": ...}`, and output is cut off at `sandbox.max_output_chars` (4,000 characters). |
+| No HR or confidential financial data | `CrmStore` reads only `data/crm/`. The tool guardrail also rejects code that mentions restricted terms such as `salary`. |
+
+The syntax check also closes the usual escape routes from restricted Python:
+- names and attributes starting with `_` (for example `__class__` and `__subclasses__`)
+- frame and generator attributes (`gi_frame`, `f_back`)
+- pandas file and network methods (`read_*`, and `to_*` apart from `to_dict`, `to_list`, `to_string` and `to_frame`)
+- `query`, `eval` and `format`
+
+The tool guardrail runs the same check before the tool is called, so rejected code is logged as a guardrail block with the reason `unsafe_code`.
+
+The tests in `tests/test_sandbox.py` cover safe analysis, each rejected pattern, the timeout and the output limit. Evaluation tasks T032–T036 cover the same ground through the agent.
+
+### Limitations that remain
+
+- **No operating system boundary:** this is a restricted Python environment, not a container. The sandbox process runs as the same user, with the same file permissions as the app. A new escape route through Python or pandas internals would have the same access as the app itself. Running it in a container or a separate locked-down user (Docker, gVisor, or similar) would give a real security boundary.
+- **Blocklists:** the syntax check lists what is forbidden, so a dangerous attribute missing from the list would be allowed.
+- **No memory limit:** large allocations are stopped only by the timeout.
+- **Network block only covers Python:** it replaces Python's socket functions and does not use operating system controls.
+- **Timeout includes startup:** starting the sandbox process takes about 1–2 seconds of the 10-second limit, and the process start adds that delay to each call.
+- **The model must choose the tool:** it still sometimes counts by hand instead. For example, it used `list_open_opportunities` for task T004 and miscounted.
+
 ## License
 
 [License](LICENSE.txt)

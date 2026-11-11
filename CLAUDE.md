@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current state
 
-This is a Udacity project: turn a prototype SalesOps agent into a production-ready Python app. Steps 1-3, 5.1, 5.2, and 5.3 are done, and Step 4 lacks estimated cost: the notebook is refactored into a Python package that keeps the prototype's behavior, including its unsafe tools and known bugs. **Update this file as the project takes shape, especially the commands and architecture sections.**
+This is a Udacity project: turn a prototype SalesOps agent into a production-ready Python app. Steps 1-3 and 5.1-5.4 are done, and Step 4 lacks estimated cost: the notebook is refactored into a Python package that keeps the prototype's behavior, including its unsafe tools and known bugs. **Update this file as the project takes shape, especially the commands and architecture sections.**
 
-- `README.md`: the full project brief (Steps 1-8), not yet the project's own README. Read the relevant step before implementing it.
+- `README.md`: the full project brief (Steps 1-8), not yet the project's own README, plus the `## Sandboxed Execution` section added before `## License`. Read the relevant step before implementing it.
 - `starter/README.md`: the list of what the final student README must contain.
 - `starter/`: the original notebook and its data, kept as reference. `data/` is what the app reads.
 - `src/salesops_agent/`: the package. `agent/factory.py` builds the agent, `tools/registry.py` selects tools from the config, and `data_access/crm_store.py` holds CRM lookups.
@@ -14,6 +14,7 @@ This is a Udacity project: turn a prototype SalesOps agent into a production-rea
 - `config/guardrails/`: versioned input, tool, and output policies, selected in the config. `src/salesops_agent/guardrails/` holds the filters and middleware. `input.py` ends a run before the model is called. `tool.py` checks each tool call before it runs, and any block ends the run. `output.py` replaces a restricted final answer with a refusal (block, not redact), and checks `send_email` content before the approval check.
 - Middleware order in `agent/factory.py` matters: the output guardrail must wrap tool calls outside the tool guardrail. Refusals written by a guardrail carry `GUARDRAIL_KEY` or `REFUSAL_KEY` so the output check skips them.
 - A new tool must be added to `allowed_tools` in the tool policy as well as the config, because the policy denies by default.
+- `src/salesops_agent/sandbox.py` runs `run_crm_analysis` code in a separate process: an `ast` check first, then safe built-ins, approved CRM tables only, a timeout, and capped output. The tool guardrail runs the same check (`unsafe_code`). It must be started from a real file, because a `spawn` child cannot re-import a script piped through stdin.
 - `src/salesops_agent/reporting/`: a placeholder with no code yet.
 - `config/agent.yaml`: config version, model, prompt version, tool and schema versions, enabled tools, and paths. Secrets stay in `.env` (see `.env.example`).
 - `prompts/<name>/<version>.md`: versioned prompts, selected in the config.
@@ -27,9 +28,9 @@ uv sync
 uv run salesops-agent ask "Summarize the current sales pipeline by stage."
 ```
 
-Run the evaluation suite with `uv run pytest`, or one task with `uv run pytest -k T004`. It makes real model calls and writes `reports/evaluation_report.json`. There is no linter, and the notebook kernel is not installed in `.venv`.
+Run the evaluation suite and the sandbox tests with `uv run pytest`, or one task with `uv run pytest -k T004`. It makes real model calls and writes `reports/evaluation_report.json`. There is no linter, and the notebook kernel is not installed in `.venv`.
 
-Tasks are in `data/evaluation/golden_tasks.csv`, where `;` separates required items and `|` separates alternatives. Scoring is in `src/salesops_agent/evaluation/suite.py`. Tasks with `scripted_tool` or `scripted_answer` use a fake model that returns exactly that, so they are repeatable and make no API calls. T004 (the model miscounts) and T005 (the `difflib` crash) are known failures that were kept on purpose. Estimated cost is not reported yet, though the brief requires it.
+Tasks are in `data/evaluation/golden_tasks.csv`, where `;` separates required items and `|` separates alternatives. Scoring is in `src/salesops_agent/evaluation/suite.py`. Tasks with `scripted_tool` or `scripted_answer` use a fake model that returns exactly that, so they are repeatable and make no API calls. T004 (the model miscounts) and T005 (the `difflib` crash) are known failures that were kept on purpose. T022 depends on the live model trying the HR tool, and it sometimes asks a clarifying question instead. Estimated cost is not reported yet, though the brief requires it.
 
 The brief specifies these commands, which do not exist yet:
 
@@ -45,7 +46,7 @@ The agent uses `ChatOpenAI` and reads `OPENAI_API_KEY` and `OPENAI_API_BASE` fro
 
 The code must keep agent creation, prompts, tools, configuration, evaluation, logging, tracing, and reporting separate.
 
-Controls 1, 2, and 5 exist so far. All 8 prototype tools stay enabled so the tool guardrail can be shown blocking them, and `send_email` is always blocked until the HITL gate exists. Once built, every run must pass through these controls, each enforced in code rather than left to the model to refuse:
+Controls 1, 2, 4, and 5 exist so far. All 8 prototype tools stay enabled so the tool guardrail can be shown blocking them, and `send_email` is always blocked until the HITL gate exists. Once built, every run must pass through these controls, each enforced in code rather than left to the model to refuse:
 
 1. **Input guardrails** run before the request reaches the agent. They cover HR data, executive compensation, terminations/PIPs, M&A, layoffs, confidential strategy, and prompt injection.
 2. **Tool/action guardrails** inspect each proposed tool call before it executes. A blocked call returns an explicit, logged result such as `{"status": "blocked", "reason": "restricted_internal_data", "policy": "salesops_data_access_policy"}`.
