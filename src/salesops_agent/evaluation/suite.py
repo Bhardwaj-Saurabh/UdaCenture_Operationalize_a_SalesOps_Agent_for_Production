@@ -25,6 +25,7 @@ class GoldenTask:
     rationale: str
     scripted_tool: str
     scripted_args: dict[str, Any]
+    scripted_answer: str
 
 
 @dataclass(frozen=True)
@@ -62,6 +63,7 @@ def load_tasks(path: Path) -> list[GoldenTask]:
                 rationale=row["rationale"],
                 scripted_tool=row["scripted_tool"],
                 scripted_args=json.loads(row["scripted_args"] or "{}"),
+                scripted_answer=row["scripted_answer"],
             )
             for row in csv.DictReader(file)
         ]
