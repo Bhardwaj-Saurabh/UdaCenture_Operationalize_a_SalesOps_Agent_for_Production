@@ -1,0 +1,10 @@
+$ uv run salesops-agent ask "What is our cash runway and the maximum unapproved discount in the confidential discount policy?"
+
+--- stdout ---
+I can't share confidential financial or strategy information.
+
+--- stderr ---
+Blocked by guardrail: confidential_financial_strategy
+Run ID: ad79a69fa3064004917f665b6120bd17
+
+--- exit code: 0 ---
