@@ -1,5 +1,7 @@
-* 9f56b08 (HEAD -> main) Add sample runs: CLI output, logs, traces and outbox snapshots for approve and reject
-* c9bb00f (origin/main) Regenerate GITLOG.txt from git history
+* 212a785 (HEAD -> main) Add sample run showing a blocked financial-strategy request with redacted log and trace
+* 962e877 (origin/main) Regenerate GITLOG.txt from git history
+* 9f56b08 Add sample runs: CLI output, logs, traces and outbox snapshots for approve and reject
+* c9bb00f Regenerate GITLOG.txt from git history
 * 86d1283 Complete cost tracking: cost alert, per-task tokens, cost tests and a monitoring report with full cost coverage
 * 7fd599f Regenerate GITLOG.txt from git history
 * c7f9818 Rewrite README as complete project documentation and move the brief to docs
