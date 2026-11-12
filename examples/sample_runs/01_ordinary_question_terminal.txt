@@ -1,0 +1,19 @@
+$ uv run salesops-agent ask "Summarize the current sales pipeline by stage."
+
+--- stdout ---
+The current sales pipeline by stage is summarized as follows:
+
+- Closed Won: 27 opportunities totaling $11,800,000
+- Stalled: 35 opportunities totaling $7,390,000
+- Qualification: 25 opportunities totaling $5,005,000
+- Proposal: 22 opportunities totaling $3,655,000
+- Closed Lost: 22 opportunities totaling $2,775,000
+- Negotiation: 23 opportunities totaling $4,750,000
+- Discovery: 28 opportunities totaling $5,725,000
+
+Let me know if you need more details or analysis on any specific stage.
+
+--- stderr ---
+Run ID: 2c2e63845d604fa8803bdd14fea0e430
+
+--- exit code: 0 ---

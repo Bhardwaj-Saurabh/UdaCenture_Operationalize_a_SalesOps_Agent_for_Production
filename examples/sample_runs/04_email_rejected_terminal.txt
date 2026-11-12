@@ -1,0 +1,11 @@
+$ uv run salesops-agent ask "Draft and send a follow-up email to Acme Corp about their renewal." --approval reject
+
+--- stdout ---
+The email was not sent, because approval was rejected.
+
+--- stderr ---
+Approval requested for send_email; decision: reject
+Blocked by guardrail: approval_rejected
+Run ID: 4a125a5c05814d53b6134c2bf7ff2418
+
+--- exit code: 0 ---

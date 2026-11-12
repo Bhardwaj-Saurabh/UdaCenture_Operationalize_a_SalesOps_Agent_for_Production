@@ -1,0 +1,125 @@
+{
+  "run_id": "91b958a0b1de4a75a1203c3da9b2ab1c",
+  "timestamp": "2026-11-12T20:03:23.886932+00:00",
+  "task_id": null,
+  "status": "success",
+  "input": "Draft and send a follow-up email to Acme Corp about their renewal.",
+  "final_output": "The follow-up email to Acme Corp about their renewal has been drafted and sent to Omar Stone at o***@acmecorp.example.com. If you need any further assistance, please let me know!",
+  "failure_reason": null,
+  "versions": {
+    "config": "1.8.0",
+    "prompt": "salesops_system/v1",
+    "tools": "1.1.0",
+    "schemas": "v1",
+    "input_policy": "v1",
+    "tool_policy": "v2",
+    "output_policy": "v1"
+  },
+  "model": "gpt-4.1-mini",
+  "available_tools": [
+    "lookup_account",
+    "lookup_account_context",
+    "list_open_opportunities",
+    "summarize_pipeline",
+    "run_crm_analysis",
+    "lookup_internal_hr_data",
+    "lookup_internal_financial_data",
+    "draft_email",
+    "send_email"
+  ],
+  "tool_calls": [
+    {
+      "name": "draft_email",
+      "args": {
+        "account_name_or_id": "Acme Corp",
+        "purpose": "follow-up on renewal"
+      },
+      "outcome": "ran"
+    },
+    {
+      "name": "send_email",
+      "args": {
+        "to": "o***@acmecorp.example.com",
+        "subject": "Following up on Acme Corp",
+        "body": "Hi Omar,\n\nI wanted to follow up regarding follow-up on renewal.\n\nBest,\nUdaCenture SalesOps Agent\n"
+      },
+      "outcome": "ran"
+    }
+  ],
+  "guardrail_interventions": [],
+  "hitl": {
+    "approval_requested": true,
+    "request": {
+      "action": "send_email",
+      "args": {
+        "to": "o***@acmecorp.example.com",
+        "subject": "Following up on Acme Corp",
+        "body": "Hi Omar,\n\nI wanted to follow up regarding follow-up on renewal.\n\nBest,\nUdaCenture SalesOps Agent\n"
+      }
+    },
+    "decision": "approve"
+  },
+  "usage": {
+    "input_tokens": 2637,
+    "output_tokens": 136,
+    "estimated_cost_usd": 0.001272
+  },
+  "steps": [
+    {
+      "type": "user",
+      "content": "Draft and send a follow-up email to Acme Corp about their renewal."
+    },
+    {
+      "type": "model",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_ZtI6n0imHEKboP3S7IKr1Opq",
+          "name": "draft_email",
+          "args": {
+            "account_name_or_id": "Acme Corp",
+            "purpose": "follow-up on renewal"
+          }
+        }
+      ]
+    },
+    {
+      "type": "tool_result",
+      "tool": "draft_email",
+      "tool_call_id": "call_ZtI6n0imHEKboP3S7IKr1Opq",
+      "outcome": "ran",
+      "output": "{\"to\": \"o***@acmecorp.example.com\", \"subject\": \"Following up on Acme Corp\", \"body\": \"Hi Omar,\\n\\nI wanted to follow up regarding follow-up on renewal.\\n\\nBest,\\nUdaCenture SalesOps Agent\\n\", \"status\": \"drafted\"}"
+    },
+    {
+      "type": "model",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_jN5icY8Ua10lirzfLKIOBUex",
+          "name": "send_email",
+          "args": {
+            "to": "o***@acmecorp.example.com",
+            "subject": "Following up on Acme Corp",
+            "body": "Hi Omar,\n\nI wanted to follow up regarding follow-up on renewal.\n\nBest,\nUdaCenture SalesOps Agent\n"
+          }
+        }
+      ]
+    },
+    {
+      "type": "tool_result",
+      "tool": "send_email",
+      "tool_call_id": "call_jN5icY8Ua10lirzfLKIOBUex",
+      "outcome": "ran",
+      "output": "{\"status\": \"sent\", \"message\": {\"to\": \"o***@acmecorp.example.com\", \"subject\": \"Following up on Acme Corp\", \"body\": \"Hi Omar,\\n\\nI wanted to follow up regarding follow-up on renewal.\\n\\nBest,\\nUdaCenture SalesOps Agent\\n\", \"status\": \"sent\"}}"
+    },
+    {
+      "type": "model",
+      "content": "The follow-up email to Acme Corp about their renewal has been drafted and sent to Omar Stone at o***@acmecorp.example.com. If you need any further assistance, please let me know!",
+      "tool_calls": []
+    }
+  ],
+  "redaction": {
+    "policy": "salesops_output_policy_v1",
+    "note": "Restricted content is replaced with [REDACTED:<reason>], restricted fields with [REDACTED], and email addresses are masked."
+  }
+}

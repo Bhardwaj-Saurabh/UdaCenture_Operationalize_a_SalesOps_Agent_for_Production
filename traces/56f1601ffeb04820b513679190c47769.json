@@ -1,0 +1,68 @@
+{
+  "run_id": "56f1601ffeb04820b513679190c47769",
+  "timestamp": "2026-11-12T20:03:23.010943+00:00",
+  "task_id": null,
+  "status": "blocked",
+  "input": "What is the [REDACTED:executive_compensation]?",
+  "final_output": "I can't share [REDACTED:executive_compensation] information.",
+  "failure_reason": null,
+  "versions": {
+    "config": "1.8.0",
+    "prompt": "salesops_system/v1",
+    "tools": "1.1.0",
+    "schemas": "v1",
+    "input_policy": "v1",
+    "tool_policy": "v2",
+    "output_policy": "v1"
+  },
+  "model": "gpt-4.1-mini",
+  "available_tools": [
+    "lookup_account",
+    "lookup_account_context",
+    "list_open_opportunities",
+    "summarize_pipeline",
+    "run_crm_analysis",
+    "lookup_internal_hr_data",
+    "lookup_internal_financial_data",
+    "draft_email",
+    "send_email"
+  ],
+  "tool_calls": [],
+  "guardrail_interventions": [
+    {
+      "status": "blocked",
+      "reason": "executive_compensation",
+      "policy": "salesops_input_policy_v1"
+    }
+  ],
+  "hitl": {
+    "approval_requested": false,
+    "request": null,
+    "decision": null
+  },
+  "usage": {
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "estimated_cost_usd": 0.0
+  },
+  "steps": [
+    {
+      "type": "user",
+      "content": "What is the [REDACTED:executive_compensation]?"
+    },
+    {
+      "type": "model",
+      "content": "I can't share [REDACTED:executive_compensation] information.",
+      "tool_calls": [],
+      "guardrail": {
+        "status": "blocked",
+        "reason": "executive_compensation",
+        "policy": "salesops_input_policy_v1"
+      }
+    }
+  ],
+  "redaction": {
+    "policy": "salesops_output_policy_v1",
+    "note": "Restricted content is replaced with [REDACTED:<reason>], restricted fields with [REDACTED], and email addresses are masked."
+  }
+}

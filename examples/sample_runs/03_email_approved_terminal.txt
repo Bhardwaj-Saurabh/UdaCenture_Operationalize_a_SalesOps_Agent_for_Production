@@ -1,0 +1,10 @@
+$ uv run salesops-agent ask "Draft and send a follow-up email to Acme Corp about their renewal." --approval approve
+
+--- stdout ---
+The follow-up email to Acme Corp about their renewal has been drafted and sent to Omar Stone at o***@acmecorp.example.com. If you need any further assistance, please let me know!
+
+--- stderr ---
+Approval requested for send_email; decision: approve
+Run ID: 91b958a0b1de4a75a1203c3da9b2ab1c
+
+--- exit code: 0 ---

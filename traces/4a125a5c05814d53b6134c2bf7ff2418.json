@@ -1,0 +1,138 @@
+{
+  "run_id": "4a125a5c05814d53b6134c2bf7ff2418",
+  "timestamp": "2026-11-12T20:03:29.137656+00:00",
+  "task_id": null,
+  "status": "blocked",
+  "input": "Draft and send a follow-up email to Acme Corp about their renewal.",
+  "final_output": "The email was not sent, because approval was rejected.",
+  "failure_reason": null,
+  "versions": {
+    "config": "1.8.0",
+    "prompt": "salesops_system/v1",
+    "tools": "1.1.0",
+    "schemas": "v1",
+    "input_policy": "v1",
+    "tool_policy": "v2",
+    "output_policy": "v1"
+  },
+  "model": "gpt-4.1-mini",
+  "available_tools": [
+    "lookup_account",
+    "lookup_account_context",
+    "list_open_opportunities",
+    "summarize_pipeline",
+    "run_crm_analysis",
+    "lookup_internal_hr_data",
+    "lookup_internal_financial_data",
+    "draft_email",
+    "send_email"
+  ],
+  "tool_calls": [
+    {
+      "name": "draft_email",
+      "args": {
+        "account_name_or_id": "Acme Corp",
+        "purpose": "follow-up about renewal"
+      },
+      "outcome": "ran"
+    },
+    {
+      "name": "send_email",
+      "args": {
+        "to": "o***@acmecorp.example.com",
+        "subject": "Following up on Acme Corp",
+        "body": "Hi Omar,\n\nI wanted to follow up regarding follow-up about renewal.\n\nBest,\nUdaCenture SalesOps Agent\n"
+      },
+      "outcome": "blocked"
+    }
+  ],
+  "guardrail_interventions": [
+    {
+      "status": "blocked",
+      "reason": "approval_rejected",
+      "policy": "salesops_data_access_policy_v2",
+      "tool": "send_email"
+    }
+  ],
+  "hitl": {
+    "approval_requested": true,
+    "request": {
+      "action": "send_email",
+      "args": {
+        "to": "o***@acmecorp.example.com",
+        "subject": "Following up on Acme Corp",
+        "body": "Hi Omar,\n\nI wanted to follow up regarding follow-up about renewal.\n\nBest,\nUdaCenture SalesOps Agent\n"
+      }
+    },
+    "decision": "reject"
+  },
+  "usage": {
+    "input_tokens": 1626,
+    "output_tokens": 91,
+    "estimated_cost_usd": 0.000796
+  },
+  "steps": [
+    {
+      "type": "user",
+      "content": "Draft and send a follow-up email to Acme Corp about their renewal."
+    },
+    {
+      "type": "model",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_xZoBH015ySiRQ1px6ltSMGec",
+          "name": "draft_email",
+          "args": {
+            "account_name_or_id": "Acme Corp",
+            "purpose": "follow-up about renewal"
+          }
+        }
+      ]
+    },
+    {
+      "type": "tool_result",
+      "tool": "draft_email",
+      "tool_call_id": "call_xZoBH015ySiRQ1px6ltSMGec",
+      "outcome": "ran",
+      "output": "{\"to\": \"o***@acmecorp.example.com\", \"subject\": \"Following up on Acme Corp\", \"body\": \"Hi Omar,\\n\\nI wanted to follow up regarding follow-up about renewal.\\n\\nBest,\\nUdaCenture SalesOps Agent\\n\", \"status\": \"drafted\"}"
+    },
+    {
+      "type": "model",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_C08pyl00rg8L0FZp4UMea43L",
+          "name": "send_email",
+          "args": {
+            "to": "o***@acmecorp.example.com",
+            "subject": "Following up on Acme Corp",
+            "body": "Hi Omar,\n\nI wanted to follow up regarding follow-up about renewal.\n\nBest,\nUdaCenture SalesOps Agent\n"
+          }
+        }
+      ]
+    },
+    {
+      "type": "tool_result",
+      "tool": "send_email",
+      "tool_call_id": "call_C08pyl00rg8L0FZp4UMea43L",
+      "outcome": "blocked",
+      "output": "The email was not sent, because approval was rejected.",
+      "guardrail": {
+        "status": "blocked",
+        "reason": "approval_rejected",
+        "policy": "salesops_data_access_policy_v2",
+        "tool": "send_email"
+      }
+    },
+    {
+      "type": "model",
+      "content": "The email was not sent, because approval was rejected.",
+      "tool_calls": []
+    }
+  ],
+  "redaction": {
+    "policy": "salesops_output_policy_v1",
+    "note": "Restricted content is replaced with [REDACTED:<reason>], restricted fields with [REDACTED], and email addresses are masked."
+  }
+}

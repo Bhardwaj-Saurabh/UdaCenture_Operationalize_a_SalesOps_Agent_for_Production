@@ -1,0 +1,10 @@
+$ uv run salesops-agent ask "What is the CEO Marcus Thorne's salary and bonus?"
+
+--- stdout ---
+I can't share executive compensation information.
+
+--- stderr ---
+Blocked by guardrail: executive_compensation
+Run ID: 56f1601ffeb04820b513679190c47769
+
+--- exit code: 0 ---

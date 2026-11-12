@@ -331,6 +331,8 @@ Every run records the approval outcome in two places:
 | `logs/runs.jsonl` | `hitl: {"approval_requested", "action", "decision"}` |
 | `traces/<run_id>.json` | The full approval request, including the email the reviewer was asked about, and each tool call's outcome (`ran`, `blocked` or `pending`) |
 
+Sample approve and reject runs, with their outbox snapshots, log lines and traces, are in [`examples/sample_runs/`](examples/sample_runs/README.md).
+
 Evaluation tasks T019, T023 and T037–T040 cover the three paths (no decision, approve, reject) with both scripted and live model runs.
 
 ## Logging and Tracing
@@ -345,7 +347,11 @@ Every run writes one log line and one trace file, whether it succeeds, is blocke
 
 `traces/<run_id>.json` holds one file per run. It is meant for debugging a single run. The run ID is printed by the CLI, so a log line and its trace always share an ID.
 
-`logs/` and `traces/` are both gitignored. They stay on the machine that ran the agent.
+`logs/` and `traces/` are gitignored, so new runs stay on the machine that ran the agent. The exception is four sample runs, committed as examples: their log lines are in `logs/runs.jsonl` and their traces in `traces/`. See [Sample runs](#sample-runs).
+
+### Sample runs
+
+[`examples/sample_runs/`](examples/sample_runs/README.md) holds four real runs of the documented command: an ordinary question, a blocked restricted request, an approved email and a rejected email. For each run it has the terminal output and the run ID that links the log line to its trace. For the two email runs it also has the outbox before and after the decision. Approval adds one email to the outbox; rejection leaves it unchanged.
 
 ### What fields are captured
 
@@ -514,7 +520,8 @@ Options:
 │   └── outbox/                    simulated sent emails (gitignored)
 ├── src/salesops_agent/            application code (see Architecture)
 ├── tests/                         evaluation suite and sandbox tests
-├── logs/  traces/                 run logs and traces (gitignored)
+├── logs/  traces/                 run logs and traces (gitignored, except four committed samples)
+├── examples/sample_runs/          terminal output and outbox snapshots for the sample runs
 ├── reports/                       evaluation_report.json, monitoring_report.md
 ├── starter/                       original prototype notebook and data, kept for reference
 ├── docs/project_brief.md          the original project brief
