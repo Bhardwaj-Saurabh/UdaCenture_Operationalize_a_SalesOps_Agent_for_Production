@@ -1,4 +1,6 @@
-* 86d1283 (HEAD -> main, origin/main) Complete cost tracking: cost alert, per-task tokens, cost tests and a monitoring report with full cost coverage
+* 9f56b08 (HEAD -> main) Add sample runs: CLI output, logs, traces and outbox snapshots for approve and reject
+* c9bb00f (origin/main) Regenerate GITLOG.txt from git history
+* 86d1283 Complete cost tracking: cost alert, per-task tokens, cost tests and a monitoring report with full cost coverage
 * 7fd599f Regenerate GITLOG.txt from git history
 * c7f9818 Rewrite README as complete project documentation and move the brief to docs
 * 6c90a44 Regenerate GITLOG.txt from git history
